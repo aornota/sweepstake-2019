@@ -7,4 +7,7 @@ publish/
 temp-gh-pages/
 bin/
 obj/
+persisted/
+secret/
+deploy.zip
 yarn-error.log

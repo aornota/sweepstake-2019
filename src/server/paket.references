@@ -1,0 +1,9 @@
+group server
+
+	FSharp.Core
+	Microsoft.AspNetCore
+	Microsoft.AspNetCore.StaticFiles
+	Microsoft.AspNetCore.WebSockets
+    Giraffe
+    jose-jwt
+    Thoth.Json.Net

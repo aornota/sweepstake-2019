@@ -1,0 +1,52 @@
+version 5.215.0
+
+group build
+
+	source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+
+    nuget FSharp.Core
+    nuget Fake.Core.Environment
+    nuget Fake.Core.Target
+    nuget Fake.Core.Trace
+    nuget Fake.DotNet.Cli
+    nuget Fake.IO.FileSystem
+    nuget Fake.IO.Zip
+    github CompositionalIT/fshelpers src/FsHelpers/ArmHelper/ArmHelper.fs
+
+group server
+
+	source https://api.nuget.org/v3/index.json
+    framework: netcoreapp2.2
+    storage: none
+
+	nuget FSharp.Core
+	nuget Microsoft.AspNetCore
+	nuget Microsoft.AspNetCore.StaticFiles
+	nuget Microsoft.AspNetCore.WebSockets
+    nuget Giraffe
+    nuget jose-jwt
+    nuget Thoth.Json.Net prerelease
+
+group ui
+
+	source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+
+    nuget Fable.Core prerelease
+	nuget Elmish.Toastr
+    nuget Fable.Elmish prerelease
+	nuget Fable.Elmish.Browser prerelease
+    nuget Fable.Elmish.Debugger prerelease
+    nuget Fable.Elmish.HMR prerelease
+    nuget Fable.Elmish.React prerelease
+    nuget Fable.FontAwesome.Free prerelease
+    nuget Fable.Promise prerelease
+    nuget Fable.React prerelease
+    nuget Fulma prerelease
+    nuget Fulma.Extensions.Wikiki.Checkradio
+	nuget Fulma.Extensions.Wikiki.PageLoader prerelease
+	nuget Fulma.Extensions.Wikiki.Tooltip prerelease
+	nuget Thoth.Json prerelease
