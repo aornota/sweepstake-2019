@@ -7,8 +7,7 @@ open Aornota.Sweepstake2019.Common.Revision
 
 open System
 
-type DraftId = | DraftId of guid : Guid with
-    static member Create () = Guid.NewGuid () |> DraftId
+type DraftId = | DraftId of guid : Guid with static member Create () = Guid.NewGuid () |> DraftId
 
 type DraftType =
     | Constrained of starts : DateTimeOffset * ends : DateTimeOffset
@@ -56,6 +55,7 @@ type CurrentUserDraftDto = { UserDraftKey : UserDraftKey ; Rvn : Rvn ; UserDraft
 type UserDraftSummaryDto = { UserDraftKey : UserDraftKey ; PickCount : int }
 
 let [<Literal>] MAX_TEAM_PICKS = 1
+// TODO-NMB: MAX_FORWARD_PICKS | MAX_BACK_PICKS...
 let [<Literal>] MAX_GOALKEEPER_PICKS = 1
 let [<Literal>] MAX_OUTFIELD_PLAYER_PICKS = 10
 

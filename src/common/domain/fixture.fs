@@ -7,11 +7,11 @@ open Aornota.Sweepstake2019.Common.UnitsOfMeasure
 
 open System
 
-type FixtureId = | FixtureId of guid : Guid with
-    static member Create () = Guid.NewGuid () |> FixtureId
+type FixtureId = | FixtureId of guid : Guid with static member Create () = Guid.NewGuid () |> FixtureId
 
 type Role = | Home | Away
 
+// TODO-NMB: Drop RoundOf16 | ThirdPlacePlayOff->BronzeFinal...
 type Stage =
     | Group of group : Group
     | RoundOf16 of matchNumber : uint32
@@ -21,22 +21,23 @@ type Stage =
     | Final
 
 type Unconfirmed =
-    | Winner of stage : Stage
-    | RunnerUp of group : Group
-    | Loser of semiFinalOrdinal : uint32
+    | GroupRunnerUp of group : Group
+    | StageWinner of stage : Stage
+    | SemiFinalLoser of semiFinalOrdinal : uint32
 
 type Participant =
     | Confirmed of squadId : SquadId
     | Unconfirmed of unconfirmed : Unconfirmed
 
-type MatchEventId = | MatchEventId of guid : Guid with
-    static member Create () = Guid.NewGuid () |> MatchEventId
+type MatchEventId = | MatchEventId of guid : Guid with static member Create () = Guid.NewGuid () |> MatchEventId
 
+// TODO-NMB: KickOutcome?...
 type PenaltyOutcome =
     | Scored
     | Missed
     | Saved of savedBy : SquadId * PlayerId
 
+// TODO-NMB: Rework...
 type MatchEvent =
     | Goal of squadId : SquadId * playerId : PlayerId * assistedBy : PlayerId option
     | OwnGoal of squadId : SquadId * playerId : PlayerId
@@ -55,11 +56,13 @@ type Card =
     | SecondYellow
     | Red
 
+// TODO-NMB: BonusPoint/s?...
 type TeamScoreEvent =
     | MatchWon
     | MatchDrawn
     | PlayerCard of playerId : PlayerId * card : Card
 
+// TODO-NMB: Rework...
 type PlayerScoreEvent =
     | GoalScored
     | GoalAssisted

@@ -500,7 +500,7 @@ let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Pr
                     | _ :: _ ->
                         yield lazyViewOrHMR renderSweepstakerPlayers (useDefaultTheme, currentUserId, players, userDic, fixtureDic)
                     | [] -> ()
-                | None -> yield [ str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen*
+                | None -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen*
             | Best best ->
                 let best = match best with | Some best -> best | None -> Teams
                 let bestTabs = bestTabs best (ShowBest >> dispatch)

@@ -23,9 +23,9 @@ module RctH = Fable.React.Helpers
 
 let private possibleParticipants unconfirmed (fixtureDic:FixtureDic) (squadDic:SquadDic) =
     match unconfirmed with
-    | Winner (Group group) | RunnerUp group ->
+    | StageWinner (Group group) | GroupRunnerUp group ->
         squadDic |> List.ofSeq |> List.choose (fun (KeyValue (squadId, squad)) -> if squad.Group = group then squadId |> Some else None)
-    | Winner (RoundOf16 matchNumber) ->
+    | StageWinner (RoundOf16 matchNumber) ->
         fixtureDic |> List.ofSeq |> List.map (fun (KeyValue (_, fixture)) ->
             match fixture.Stage with
             | RoundOf16 otherMatchNumber when otherMatchNumber = matchNumber ->
@@ -34,7 +34,7 @@ let private possibleParticipants unconfirmed (fixtureDic:FixtureDic) (squadDic:S
                 | _ -> []
             | _ -> [])
             |> List.collect id
-    | Winner (QuarterFinal quarterFinalOrdinal) ->
+    | StageWinner (QuarterFinal quarterFinalOrdinal) ->
         fixtureDic |> List.ofSeq |> List.map (fun (KeyValue (_, fixture)) ->
             match fixture.Stage with
             | QuarterFinal otherOrdinal when otherOrdinal = quarterFinalOrdinal ->
@@ -43,7 +43,7 @@ let private possibleParticipants unconfirmed (fixtureDic:FixtureDic) (squadDic:S
                 | _ -> []
             | _ -> [])
             |> List.collect id
-    | Winner (SemiFinal semiFinalOrdinal) | Loser semiFinalOrdinal ->
+    | StageWinner (SemiFinal semiFinalOrdinal) | SemiFinalLoser semiFinalOrdinal ->
         fixtureDic |> List.ofSeq |> List.map (fun (KeyValue (_, fixture)) ->
             match fixture.Stage with
             | SemiFinal otherOrdinal when otherOrdinal = semiFinalOrdinal ->
@@ -439,7 +439,7 @@ let private stageText stage =
     | RoundOf16 matchNumber -> sprintf "Round of 16 (match %i)" matchNumber
     | QuarterFinal quarterFinalOrdinal -> sprintf "Quarter-final %i" quarterFinalOrdinal
     | SemiFinal semiFinalOrdinal -> sprintf "Semi-final %i" semiFinalOrdinal
-    | ThirdPlacePlayOff -> "Third/fourth place play-off"
+    | ThirdPlacePlayOff -> "Bronze final"
     | Final -> "Final"
 
 let private confirmedFixtureDetails (squadDic:SquadDic) fixture =
@@ -636,28 +636,28 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
             if canConfirmParticipant then
                 let confirmable =
                     match unconfirmed with
-                    | Winner (Group group) | RunnerUp group ->
+                    | StageWinner (Group group) | GroupRunnerUp group ->
                         let dependsOnPending =
                             fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
                                 match fixture.Stage with
                                 | Group otherGroup when otherGroup = group -> match fixture.MatchResult with | Some _ -> false | None -> true
                                 | _ -> false)
                         dependsOnPending.Length = 0
-                    | Winner (RoundOf16 matchNumber) ->
+                    | StageWinner (RoundOf16 matchNumber) ->
                         let dependsOnPending =
                             fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
                                 match fixture.Stage with
                                 | RoundOf16 otherMatchNumber when otherMatchNumber = matchNumber -> match fixture.MatchResult with | Some _ -> false | None -> true
                                 | _ -> false)
                         dependsOnPending.Length = 0
-                    | Winner (QuarterFinal quarterFinalOrdinal) ->
+                    | StageWinner (QuarterFinal quarterFinalOrdinal) ->
                         let dependsOnPending =
                             fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
                                 match fixture.Stage with
                                 | QuarterFinal otherOrdinal when otherOrdinal = quarterFinalOrdinal -> match fixture.MatchResult with | Some _ -> false | None -> true
                                 | _ -> false)
                         dependsOnPending.Length = 0
-                    | Winner (SemiFinal semiFinalOrdinal) | Loser semiFinalOrdinal ->
+                    | StageWinner (SemiFinal semiFinalOrdinal) | SemiFinalLoser semiFinalOrdinal ->
                         let dependsOnPending =
                             fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
                                 match fixture.Stage with
