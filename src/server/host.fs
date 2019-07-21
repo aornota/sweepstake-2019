@@ -29,11 +29,11 @@ let private log category = (Host, category) |> consoleLogger.Log
 
 let private serverStarted = DateTimeOffset.UtcNow
 
-let private uiPath = // note: relative to current [server] directory, "ui" folder might be sibling (e.g. when running with webpack-dev-server) or child (e.g. once published)
-    let uiPath = Path.Combine ("..", "ui") |> Path.GetFullPath
-    if Directory.Exists uiPath then uiPath else "ui" |> Path.GetFullPath
+let private publicPath =
+    let publicPath = Path.Combine ("..", "ui/public") |> Path.GetFullPath // e.g. when served via webpack-dev-server
+    if Directory.Exists publicPath then publicPath else "public" |> Path.GetFullPath // e.g. when published/deployed
 
-let private indexPath = Path.Combine (uiPath, "index.html")
+let private indexPath = Path.Combine (publicPath, "index.html")
 
 let private webApp : HttpFunc -> Http.HttpContext -> HttpFuncResult = choose [ route "/" >=> htmlFile indexPath ]
 
@@ -47,8 +47,8 @@ let private configureServices (services:IServiceCollection) = services.AddGiraff
 
 let private builder = WebHost.CreateDefaultBuilder ()
 
-builder.UseWebRoot uiPath |> ignore
-builder.UseContentRoot uiPath |> ignore
+builder.UseWebRoot publicPath |> ignore
+builder.UseContentRoot publicPath |> ignore
 builder.Configure (Action<IApplicationBuilder> configureApp) |> ignore
 // TODO-NMB-LOW: Suppress ASP.Net Core logging (since can get mixed up with ConsoleLogger output, i.e. since Console not thread-safe)?... builder.ConfigureLogging (...) |> ignore
 builder.ConfigureServices configureServices |> ignore

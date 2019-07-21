@@ -2,6 +2,8 @@ module Aornota.Sweepstake2019.Ui.Render.Bulma
 
 open Aornota.Sweepstake2019.Ui.Render.Common
 
+open System
+
 open Fable.React.Props
 module RctS = Fable.React.Standard
 
@@ -111,9 +113,11 @@ let navbarItem children = Navbar.Item.div [] children
 let navbarStart children = Navbar.Start.div [] children
 let navbarEnd children = Navbar.End.div [] children
 
+// TODO-NMB: let radioInline (key:Guid) text isChecked disabled onChange =...
 let radioInline text isChecked disabled onChange =
     let colour, text = if isChecked then IsSuccess, bold text else IsPrimary, str text
     Checkradio.radioInline [
+        // TODO-NMB...Checkradio.Id (key.ToString ())
         Checkradio.HasBackgroundColor
         Checkradio.Color colour
         Checkradio.Size IsSmall

@@ -21,8 +21,6 @@ open System
 
 open Elmish
 
-open Fable.Core.JsInterop
-
 let [<Literal>] private NEWS_PREFERENCES_KEY = "sweepstake-2019-ui-news-preferences"
 
 let private readPreferencesCmd =

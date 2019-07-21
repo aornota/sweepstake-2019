@@ -15,8 +15,6 @@ open Aornota.Sweepstake2019.Ui.Shared
 
 open Elmish
 
-open Fable.Core.JsInterop
-
 open System
 
 let initialize () : State * Cmd<Input> =

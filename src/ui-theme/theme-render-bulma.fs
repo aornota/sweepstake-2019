@@ -390,8 +390,9 @@ let textArea theme (key:Guid) text errorText helpInfo autoFocus disabled (onChan
 // TODO-NMB-MEDIUM: "Genericize"?...
 let textBox theme (key:Guid) text iconData isPassword helpErrorText helpInfo autoFocus disabled (onChange:string -> unit) onEnter =
     let className = getClassName theme false
+    let input = if isPassword then Input.password else Input.text
     Control.div [ Control.HasIconLeft ] [
-        yield Input.text [
+        yield input [
             match helpErrorText with | Some _ -> yield Input.Color IsDanger | None -> ()
             yield Input.CustomClass className
             yield Input.Size IsSmall

@@ -16,6 +16,7 @@ open Fake.Core.TargetOperators
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
+open Fake.IO.FileSystemOperators
 
 open Cit.Helpers.Arm
 open Cit.Helpers.Arm.Parameters
@@ -35,8 +36,9 @@ let mutable private deploymentOutputs : ArmOutput option = None
 
 let private serverDir = Path.getFullName "./src/server"
 let private uiDir = Path.getFullName "./src/ui"
-let private uiPublishDir = Path.combine uiDir "publish"
+let private uiPublishDir = uiDir </> "publish"
 let private publishDir = Path.getFullName "./publish"
+let private publishPublicDir = publishDir </> "public"
 
 let private platformTool tool winTool =
     let tool = if Environment.isUnix then tool else winTool
@@ -69,6 +71,7 @@ let private openBrowser url =
 let private buildUi webpackFlags = runTool yarnTool (sprintf "webpack-cli %s" webpackFlags) __SOURCE_DIRECTORY__
 let private buildUiLocal () = buildUi "-p"
 let private buildUiAzure () = buildUi "-p --verbose" // note: need something to distinguish between "local" and "azure" production builds in webpack.config.js
+let private publishUi () = Shell.copyDir publishPublicDir uiPublishDir FileFilter.allFiles
 
 Target.create "clean-ui-publish" (fun _ -> Shell.cleanDir uiPublishDir)
 Target.create "clean-publish" (fun _ -> Shell.cleanDir publishDir) // note: this will delete any .\persisted and .\secret folders in publishDir (though should not be running server from publishDir!)
@@ -94,10 +97,10 @@ Target.create "build" (fun _ -> ())
 Target.create "publish-server" (fun _ -> runDotNet (sprintf "publish -c Release -o \"%s\"" publishDir) serverDir)
 Target.create "publish-ui-local" (fun _ ->
     buildUiLocal ()
-    Shell.copyDir (Path.combine publishDir "public") uiPublishDir FileFilter.allFiles)
+    publishUi ())
 Target.create "publish-ui-azure" (fun _ ->
     buildUiAzure ()
-    Shell.copyDir (Path.combine publishDir "public") uiPublishDir FileFilter.allFiles)
+    publishUi ())
 Target.create "publish" (fun _ -> ())
 
 Target.create "arm-template" (fun _ ->
@@ -105,7 +108,7 @@ Target.create "arm-template" (fun _ ->
     let environment = "sweepstake-2019"
     let authCtx =
         let subscriptionId = Guid("9ad207a4-28b9-48a4-b6ba-710c35034343") // azure-djnarration
-        let clientId = Guid("TODO-NMB...") // TODO-NMB: sweepstake-2019 [Azure AD application]...
+        let clientId = Guid("1fce263a-3c7a-4eda-9545-88d842ceda5d") // sweepstake-2019 [Azure AD application]
         Trace.tracefn "Deploying template '%s' to resource group '%s' in subscription '%O'..." armTemplate environment subscriptionId
         authenticateDevice Trace.trace { ClientId = clientId ; TenantId = None } subscriptionId |> Async.RunSynchronously
     let deployment =
