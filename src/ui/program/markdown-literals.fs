@@ -1,55 +1,45 @@
 module Aornota.Sweepstake2019.Ui.Program.Markdown.Literals
 
-let [<Literal>] SCORING_SYSTEM_MARKDOWN = """Each sweepstake team will consist of a **team/coach**, **1 goalkeeper** and **10 outfield players**.
+let [<Literal>] SCORING_SYSTEM_MARKDOWN = """### TO BE CONFIRMED...
 
-(Although outfield players have been categorized as defenders, midfielders or forwards, you can choose any combination you like, e.g. if you want to go for eight defenders and two
-midfielders - the no-longer-fashionable [except in Northern Ireland] 8-2-0 formation - please do.)
+Each sweepstake team will consist of a **team/coach**, **8 forwards** and **7 backs**.
 
 The **team/coach** will score (or lose) points for:
-+ **winning** a match: _**20**_ or _**16**_ or _**12**_ (see below)
-+ **drawing** a match: _**8**_ or _**6**_ or _**4**_ (see below)
-+ a team player receiving a **yellow card**: _**-1**_
-+ a team player receiving a **red card**: _**-3**_
++ **winning** a match: _**10**_ or _**8**_ or _**6**_ (see below)
++ **drawing** a match: _**5**_ or _**4**_ or _**3**_ (see below)
++ per **bonus point** earned: _**3**_ or _**2**_ or _**1**_ (see below)
++ the team scoring a **penalty try**: _**6**_
++ a team player receiving a **yellow card**: _**-2**_
++ a team player receiving a **red card**: _**-4**_
 
 (If a player receives a second yellow card in a match, the two yellow cards will be scored as a red card instead; however, if a player receives a yellow card followed by a "straight"
 red card, both cards will be scored.)
 
-Where multiple possible scores are given above, the score will depend on whether the team and their opponents are in the top 16 seeds:
-+ if the team **is** a top 16 seed but their opponents are **not**, the **lowest** score will apply
-+ if the team is **not** a top 16 seed but their opponents **are**, the **highest** score will apply
-+ if **both** teams are top 16 seeds - or if **neither** team is - the **middle** score will apply
+Where multiple possible scores are given above, the score will depend on whether the team and their opponents are in the top 8 seeds:
++ if the team **is** a top 8 seed but their opponents are **not**, the **lowest** score will apply
++ if the team is **not** a top 8 seed but their opponents **are**, the **highest** score will apply
++ if **both** teams are top 8 seeds - or if **neither** team is - the **middle** score will apply
 
-The top 16 seeds are (in order): Russia; Germany; Brazil; Portugal; Argentina; Belgium; Poland; France; Spain; Peru; Switzerland; England; Colombia; Mexico; Uruguay; and Croatia.
+The top 8 seeds are (in order): New Zealand; England; Australia; Ireland; Scotland; France; South Africa; and Wales.
 
-The remaining teams are: Denmark; Iceland; Costa Rica; Sweden; Tunisia; Egypt; Senegal; Iran; Serbia; Nigeria; Australia; Japan; Morocco; Panama; South Korea; and Saudi Arabia.
+The remaining teams are: Argentina; Canada; Fiji; Georgia; Italy; Japan; Namibia; Russia; Samoa; Tonga; United States; and Uruguay.
 
-(Note that Russia are only in the top 16 seeds because they are hosting the tournament; based on the October 2017 world rankings, they are the worst team participating.)
+The team can earn _up to two_ bonus points (weighted as outlined above) for:
++ scoring 4 or more tries in a match
++ losing by 7 points or fewer
 
-**All players** will score (or lose) points for:
-+ being named **man-of-the-match**: _**15**_
-+ _**scoring**_ a **goal** or a **penalty**: _**12**_
-+ _**assisting**_ a **goal**: _**3**_ (note that a goal cannot be assisted by the same player who scored the goal)
-+ _**missing**_ a **penalty**: _**-6**_
-+ _**scoring**_ an **own goal**: _**-6**_
-+ receiving a **yellow card**: _**-2**_
+The **forwards** and **backs** will score (or lose) points for:
++ being named **man-of-the-match**: _**10**_
++ scoring a **try**: _**9**_
++ kicking a **drop goal** or **penalty**: _**3**_
++ kicking a **conversion**: _**2**_
++ _missing_ a **conversion**: _**-1**_
++ _missing_ a **penalty**: _**-2**_
++ receiving a **yellow card**: _**-3**_
 + receiving a **red card**: _**-6**_
 
-(A penalty will be considered as "missed" irrespective of whether the goalkeeper touched the ball. And again, if a player receives a second yellow card in a match, the two yellow cards
-will be scored as a red card instead; however, if a player receives a yellow card followed by a "straight" red card, both cards will be scored.)
-
-In addition, **goalkeepers** will score points for:
-+ keeping a **clean sheet**: _**12**_
-+ _**saving**_ a **penalty**: _**12**_
-
-Note that outfield players can also score "goalkeeper" points if they end up playing in goal. (It probably won't happen - but you never know...)
-
-(If more than one goalkeeper features for a team in a match, the "clean sheet" points will be awarded to whichever goalkeeper played more "regulation" minutes; if they played the same
-amount of minutes, the points will be shared. A penalty will only be considered as "saved" if the goalkeeper touched the ball.)
-
-Information about assists and such will be nicked from <https://www.whoscored.com/>.
-
-As always, points can only be scored for goals / penalties / assists / &c. during normal time and extra time. **Penalty shootouts do not contribute to the scoring** [except to the extent
-that they determine who wins the match] - well, unless a player manages to get booked or sent-off during the shootout. Stranger things have happened..."""
+(If penalties or conversions are retaken for any reason, only the outcome of the final attempt will be scored. And again, if a player receives a second yellow card in a match, the two
+yellow cards will be scored as a red card instead; however, if a player receives a yellow card followed by a "straight" red card, both cards will be scored.)"""
 
 let [<Literal>] DRAFT_ALGORITHM_MARKDOWN = """This is not the easiest thing to explain - so let's try a simplified example:
 
@@ -88,13 +78,13 @@ And for the third round, **neph** and **rosie** have uncontested picks (Saki and
 ---
 It's not a perfect algorithm by any means. But it's the best I've been able to come up with...
 
-For a more detailed example, here are the [first and second draft details](https://aornota.github.io/sweepstake.2016/draft.html) for the world-famous Euro 2016 sweepstake."""
+For a more detailed example, here are the [first and second draft details](http://aornota.github.io/sweepstake.2015/draft.html) for the world-famous Rugby World Cup 2015 sweepstake."""
 
 let [<Literal>] PAYOUTS_MARKDOWN = """**Confirmed payouts**:
-+ £65 for first place
-+ £35 for second place
-+ £20 for third place
-+ £10 for the [_деревянная ложка_](https://translate.google.co.uk/#auto/en/%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D1%8F%D0%BD%D0%BD%D0%B0%D1%8F%20%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0)"""
++ **TBC** for first place
++ **TBC** for second place
++ **TBC** for third place
++ **TBC** for the [_木製スプーン_](https://translate.google.co.uk/#view=home&op=translate&sl=auto&tl=en&text=%E6%9C%A8%E8%A3%BD%E3%82%B9%E3%83%97%E3%83%BC%E3%83%B3)"""
 
 let [<Literal>] MARKDOWN_SYNTAX_MARKDOWN = """# Markdown syntax
 ### A very quick introduction
@@ -117,8 +107,10 @@ This is a list of Mdou Moctar albums:
 
 | Name | Released |   |
 |:-----|---------:|:-:|
-| [_Sousoume Tamachek_](https://mdoumoctar.bandcamp.com/album/sousoume-tamachek) | September 2017 | ![](https://tinyurl.com/ybjew7oo) |
-| [_Akounak Tedalat Taha Tazoughai_](https://mdoumoctar.bandcamp.com/album/akounak-tedalat-taha-tazoughai-ost) (original soundtrack recording) | June 2015 | ![](https://tinyurl.com/y7hgyc77) |
+| [_Ilana: The Creator_](https://mdoumoctar.bandcamp.com/album/ilana-the-creator) | March 2019 | ![](https://tinyurl.com/y3285qgd "Like ZZ Top freaking out with Eddie Van Halen in 1975") |
+| [_Blue Stage Session_](https://mdoumoctar.bandcamp.com/album/mdou-moctar-blue-stage-session) | January 2019 | ![](https://tinyurl.com/y6roz6yn "Live in Detroit") |
+| [_Sousoume Tamachek_](https://mdoumoctar.bandcamp.com/album/sousoume-tamachek) | September 2017 | ![](https://tinyurl.com/ybjew7oo "Quite possibly my favourite album") |
+| [_Akounak Tedalat Taha Tazoughai_](https://mdoumoctar.bandcamp.com/album/akounak-tedalat-taha-tazoughai-ost) (original soundtrack recording) | June 2015 | ![](https://tinyurl.com/y7hgyc77 "Soundtrack to a Tuareg language reimagining of 'Purple Rain'") |
 | [_Anar_](https://mdoumoctar.bandcamp.com/album/anar) | September 2014 | ![](https://tinyurl.com/y7r3fby3) |
 | [_Afelan_](https://mdoumoctar.bandcamp.com/album/afelan) | July 2013 | ![](https://tinyurl.com/yam6o2zh) |
 
