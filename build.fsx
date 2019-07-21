@@ -102,6 +102,7 @@ Target.create "publish-ui-azure" (fun _ ->
     buildUiAzure ()
     publishUi ())
 Target.create "publish" (fun _ -> ())
+Target.create "publish-azure" (fun _ -> ())
 
 Target.create "arm-template" (fun _ ->
     let armTemplate = "arm-template.json"
@@ -159,9 +160,10 @@ Target.create "help" (fun _ ->
 "clean-ui-publish" ==> "publish-ui-local"
 "clean-publish" ==> "publish-ui-local" ==> "publish"
 
+"clean-publish" ==> "publish-server" ==> "publish-azure"
 "clean-ui-publish" ==> "publish-ui-azure"
-"clean-publish" ==> "publish-ui-azure"
+"clean-publish" ==> "publish-ui-azure" ==> "publish-azure"
 
-"publish-ui-azure" ==> "arm-template" ==> "deploy-azure"
+"publish-azure" ==> "arm-template" ==> "deploy-azure"
 
 Target.runOrDefaultWithArguments "help"
