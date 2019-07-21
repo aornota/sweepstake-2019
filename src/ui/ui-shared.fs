@@ -1,14 +1,13 @@
-module Aornota.Sweepstake2018.UI.Shared
+module Aornota.Sweepstake2019.Ui.Shared
 
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
 
 open System
 open System.Collections.Generic
@@ -122,7 +121,7 @@ let pickedByUser (squadDic:SquadDic) userId =
                 match player.PickedBy with
                 | Some (pickedByUserId, draftOrdinal, timestamp) when pickedByUserId = userId -> (squadId, squad, playerId, player, draftOrdinal, timestamp) |> Some
                 | _ -> None))
-        |> List.collect id               
+        |> List.collect id
     squad, players
 let pickedCounts (squad:(_ * Squad * _ * _) option, players:(_ * _ * _ * Player * _ * _) list) =
     let teamCount = match squad with | Some _ -> 1 | None -> 0
@@ -135,7 +134,7 @@ let required (pickedTeamCount, pickedGoalkeeperCount, pickedOutfieldPlayerCount)
     let required = [
         if pickedTeamCount < MAX_TEAM_PICKS then yield "1 team/coach"
         if pickedGoalkeeperCount < MAX_GOALKEEPER_PICKS then yield "1 goalkeeper"
-        let requiredOutfieldPlayers = MAX_OUTFIELD_PLAYER_PICKS - pickedOutfieldPlayerCount            
+        let requiredOutfieldPlayers = MAX_OUTFIELD_PLAYER_PICKS - pickedOutfieldPlayerCount
         if requiredOutfieldPlayers > 0 then
             let plural = if requiredOutfieldPlayers > 1 then "s" else String.Empty
             yield sprintf "%i outfield player%s" requiredOutfieldPlayers plural ]

@@ -1,21 +1,19 @@
-module Aornota.Sweepstake2018.UI.Pages.UserAdmin.Render
+module Aornota.Sweepstake2019.Ui.Pages.UserAdmin.Render
 
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.UserAdmin.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Pages.UserAdmin.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.User // note: after Aornota.Sweepstake2019.Ui.Render.Bulma to avoid collision with Icon.Password
 
 open System
 
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let [<Literal>] private RECENTLY_ACTIVE = 5.<minute>
 
@@ -26,7 +24,7 @@ let private (|Self|RecentlyActive|SignedIn|NotSignedIn|PersonaNonGrata|) (authUs
     else if userAuthDto.UserType = UserType.PersonaNonGrata then PersonaNonGrata
     else
         match userAuthDto.LastActivity with
-        | Some lastApi ->   
+        | Some lastApi ->
             let recentlyActiveCutoff = cutoff (int (RECENTLY_ACTIVE |> minutesToSeconds) * 1<second>)
             if lastApi > recentlyActiveCutoff then RecentlyActive else SignedIn
         | None -> NotSignedIn
@@ -57,7 +55,6 @@ let private userTypeRadios selectedUserType allowedUserTypes disabledUserType di
         let disabled = disableAll || allowedUserTypes |> List.contains userType |> not || userType |> Some = disabledUserType
         let onChange = if isSelected || disabled then ignore else userType |> onChange
         radioInline (userType |> Some |> userTypeText) isSelected disabled onChange)
-    |> List.collect id
 
 let private renderCreateUsersModal (useDefaultTheme, userDic:UserDic, createUsersState:CreateUsersState) dispatch =
     let theme = getTheme useDefaultTheme
@@ -201,14 +198,14 @@ let private renderUsers (useDefaultTheme, userDic:UserDic, authUser) dispatch =
         tr false [
             td [ [ userName ] |> para theme paraDefaultSmallest ]
             td [ [ str (userType |> userTypeText) ] |> para theme paraCentredSmallest ]
-            td [ Rct.ofOption (changeUserType userId userType) ]
-            td [ Rct.ofOption (resetPassword userId userType) ] ]
+            td [ RctH.ofOption (changeUserType userId userType) ]
+            td [ RctH.ofOption (resetPassword userId userType) ] ]
     let users =
         userDic
         |> List.ofSeq
         |> List.map (fun (KeyValue (userId, (userName, userAuthDto))) ->
             let userType = userId |> userType userDic
-            let semantic = (userId, userAuthDto) |> semantic authUser.UserId            
+            let semantic = (userId, userAuthDto) |> semantic authUser.UserId
             userId, userName, userType, semantic)
         |> List.sortBy (fun (_, userName, userType, _) ->
             userType |> userTypeSortOrder, userName)
@@ -216,7 +213,7 @@ let private renderUsers (useDefaultTheme, userDic:UserDic, authUser) dispatch =
     div divCentred [
         if userDic.Count > 0 then
             yield table theme false { tableDefault with IsNarrow = true ; IsFullWidth = true } [
-                thead [ 
+                thead [
                     tr false [
                         th [ [ bold "User name" ] |> para theme paraDefaultSmallest ]
                         th [ [ bold "Type" ] |> para theme paraCentredSmallest ]
@@ -260,4 +257,4 @@ let render (useDefaultTheme, state, authUser, usersProjection:Projection<_ * Use
                 yield div divDefault [ lazyViewOrHMR2 renderChangeUserTypeModal (useDefaultTheme, userDic, changeUserTypeState) (ChangeUserTypeInput >> dispatch) ]
             | _ -> ()
             yield lazyViewOrHMR2 renderUsers (useDefaultTheme, userDic, authUser) dispatch
-            yield Rct.ofOption (createUsers theme authUser dispatch) ]
+            yield RctH.ofOption (createUsers theme authUser dispatch) ]

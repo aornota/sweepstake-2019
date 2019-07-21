@@ -1,6 +1,6 @@
-module Aornota.Sweepstake2018.Common.Domain.User
+module Aornota.Sweepstake2019.Common.Domain.User
 
-open Aornota.Common.Revision
+open Aornota.Sweepstake2019.Common.Revision
 
 open System
 
@@ -89,7 +89,7 @@ let permissions userId userType =
         | Administrator -> { ProcessDraftPermission = false } |> Some
         | Pleb | PersonaNonGrata -> None
     let resultsAdminPermission = match userType with | SuperUser | Administrator -> true | Pleb | PersonaNonGrata -> false
-    let createPostPermission, editOrRemovePostPermission = match userType with | SuperUser | Administrator -> true, userId |> Some | Pleb | PersonaNonGrata -> false, None    
+    let createPostPermission, editOrRemovePostPermission = match userType with | SuperUser | Administrator -> true, userId |> Some | Pleb | PersonaNonGrata -> false, None
     let newsPermissions =
         match createPostPermission, editOrRemovePostPermission with
         | false, None -> None

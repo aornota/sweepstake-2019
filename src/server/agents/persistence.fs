@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Server.Agents.Persistence
+module Aornota.Sweepstake2019.Server.Agents.Persistence
 
 (* Broadcasts: UsersEventsRead | UserEventWritten
                NewsEventsRead | NewsEventWritten
@@ -8,29 +8,27 @@ module Aornota.Sweepstake2018.Server.Agents.Persistence
                UserDraftsEventsRead | UserDraftEventWritten
    Subscribes: N/A *)
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Json
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.Server.Common.Helpers
-open Aornota.Server.Common.JsonConverter
-
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Events.DraftEvents
-open Aornota.Sweepstake2018.Server.Events.FixtureEvents
-open Aornota.Sweepstake2018.Server.Events.NewsEvents
-open Aornota.Sweepstake2018.Server.Events.SquadEvents
-open Aornota.Sweepstake2018.Server.Events.UserDraftEvents
-open Aornota.Sweepstake2018.Server.Events.UserEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Json
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Common.Helpers
+open Aornota.Sweepstake2019.Server.Common.JsonConverter
+open Aornota.Sweepstake2019.Server.Events.DraftEvents
+open Aornota.Sweepstake2019.Server.Events.FixtureEvents
+open Aornota.Sweepstake2019.Server.Events.NewsEvents
+open Aornota.Sweepstake2019.Server.Events.SquadEvents
+open Aornota.Sweepstake2019.Server.Events.UserDraftEvents
+open Aornota.Sweepstake2019.Server.Events.UserEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -107,8 +105,8 @@ let private readEvents<'a> entityType =
                     File.ReadAllLines (fileInfo.FullName, encoding)
                     |> List.ofArray
                     |> List.map (fun line ->
-                        let persistedEvent = Json line |> ofJson<PersistedEvent>
-                        persistedEvent.Rvn, persistedEvent.EventJson |> ofJson<'a>)
+                        let persistedEvent = Json line |> fromJson<PersistedEvent>
+                        persistedEvent.Rvn, persistedEvent.EventJson |> fromJson<'a>)
                 (id, events) |> Some
             | false, _ -> None
         | None -> None
@@ -116,7 +114,7 @@ let private readEvents<'a> entityType =
     if Directory.Exists entityTypeDir then
         try
             Directory.GetFiles (entityTypeDir, sprintf "*%s" eventsExtensionWithDot)
-            |> List.ofArray       
+            |> List.ofArray
             |> List.choose readFile
             |> Ok
         with exn -> ifDebug exn.Message UNEXPECTED_ERROR |> persistenceError (sprintf "Persistence.readEvents<%s>" typeof<'a>.Name)

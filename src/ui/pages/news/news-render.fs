@@ -1,25 +1,23 @@
-module Aornota.Sweepstake2018.UI.Pages.News.Render
+module Aornota.Sweepstake2019.Ui.Pages.News.Render
 
-open Aornota.Common.Markdown
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.Render.Markdown
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.News.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.Render.Markdown
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.News.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
 
 open System
 
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let [<Literal>] private REMOVED_MARKDOWN = "_This post has been removed_"
 
@@ -206,7 +204,7 @@ let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Pr
             | false, Some removePostState ->
                 yield div divDefault [ lazyViewOrHMR2 renderRemovePostModal (useDefaultTheme, postDic, removePostState) (RemovePostInput >> dispatch) ]
             | _ -> ()
-            yield Rct.ofOption (addPost theme authUser dispatch)           
+            yield RctH.ofOption (addPost theme authUser dispatch)
             yield! postDic
                 |> List.ofSeq
                 |> List.map (fun (KeyValue (postId, post)) -> (postId, post))

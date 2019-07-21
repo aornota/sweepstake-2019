@@ -1,6 +1,6 @@
-module Aornota.Sweepstake2018.UI.Pages.Scores.Common
+module Aornota.Sweepstake2019.Ui.Pages.Scores.Common
 
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.User
 
 type Best = | Teams | Players | Goalkeepers | Defenders | Midfielders | Forwards
 

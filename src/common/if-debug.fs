@@ -1,4 +1,4 @@
-module Aornota.Common.IfDebug
+module Aornota.Sweepstake2019.Common.IfDebug
 
 open System
 

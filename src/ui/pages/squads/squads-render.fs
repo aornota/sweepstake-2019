@@ -1,26 +1,24 @@
-module Aornota.Sweepstake2018.UI.Pages.Squads.Render
+module Aornota.Sweepstake2019.Ui.Pages.Squads.Render
 
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.Squads.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.Squads.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.Squad // note: after Aornota.Sweepstake2019.Ui.Render.Bulma to avoid collision with Icon.Forward
+open Aornota.Sweepstake2019.Ui.Shared // note: after Aornota.Sweepstake2019.Common.Domain.Squad to avoid collition with Squad[Only]Dto
 
 open System
 
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let private playerTypes = [ Goalkeeper ; Defender ; Midfielder ; Forward ]
 
@@ -34,7 +32,6 @@ let private playerTypeRadios selectedPlayerType disabledPlayerType disableAll di
         let disabled = disableAll || playerType |> Some = disabledPlayerType
         let onChange = if isSelected || disabled then ignore else playerType |> onChange
         radioInline (playerType |> playerTypeText) isSelected disabled onChange)
-    |> List.collect id
 
 let private nonWithdrawnCount squad =
     match squad with
@@ -433,7 +430,7 @@ let private renderSquad (useDefaultTheme, squadId, squad, currentDraft, pickedCo
     let score = score points pickedByPoints pickedByUserId userDic
     div divCentred [
         table theme false { tableDefault with IsNarrow = true ; IsFullWidth = true } [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
                     th []
@@ -447,14 +444,14 @@ let private renderSquad (useDefaultTheme, squadId, squad, currentDraft, pickedCo
             tbody [
                 tr false [
                     td [ [ str squadName ] |> para theme paraDefaultSmallest ]
-                    td [ Rct.ofOption eliminated ]
+                    td [ RctH.ofOption eliminated ]
                     td [ [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest ]
                     td [ [ str coachName ] |> para theme paraDefaultSmallest ]
-                    td [ Rct.ofOption draftLeft ]
-                    td [ Rct.ofOption draftRight ]
-                    td [ Rct.ofOption pickedByTag ]
+                    td [ RctH.ofOption draftLeft ]
+                    td [ RctH.ofOption draftRight ]
+                    td [ RctH.ofOption pickedByTag ]
                     td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-                    td [ Rct.ofOption eliminate ] ] ] ] ]
+                    td [ RctH.ofOption eliminate ] ] ] ] ]
 
 let private renderPlayers (useDefaultTheme, playerDic:PlayerDic, squadId, squad, currentDraft, pickedCounts, userDraftPickDic, pendingPicks, userDic:UserDic, fixtureDic:FixtureDic, authUser) dispatch =
     let theme = getTheme useDefaultTheme
@@ -515,22 +512,22 @@ let private renderPlayers (useDefaultTheme, playerDic:PlayerDic, squadId, squad,
         let score = score points pickedByPoints pickedByUserId userDic
         tr false [
             td [ [ str playerName ] |> para theme paraDefaultSmallest ]
-            td [ Rct.ofOption (editName playerId) ]
-            td [ Rct.ofOption (withdrawn player) ]
+            td [ RctH.ofOption (editName playerId) ]
+            td [ RctH.ofOption (withdrawn player) ]
             td [ [ str playerTypeText ] |> para theme paraCentredSmallest ]
-            td [ Rct.ofOption (changePosition playerId) ]
-            td [ Rct.ofOption draftLeft ]
-            td [ Rct.ofOption draftRight ]
-            td [ Rct.ofOption pickedBy ]
+            td [ RctH.ofOption (changePosition playerId) ]
+            td [ RctH.ofOption draftLeft ]
+            td [ RctH.ofOption draftRight ]
+            td [ RctH.ofOption pickedBy ]
             td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-            td [ Rct.ofOption (withdraw playerId player) ] ]
+            td [ RctH.ofOption (withdraw playerId player) ] ]
     let players = playerDic |> List.ofSeq |> List.map (fun (KeyValue (playerId, player)) -> (playerId, player)) |> List.sortBy (fun (_, player) ->
         player.PlayerType |> playerTypeSortOrder, player.PlayerName)
     let playerRows = players |> List.map playerRow
     div divCentred [
         if playerDic.Count > 0 then
             yield table theme false { tableDefault with IsNarrow = true ; IsFullWidth = true } [
-                thead [ 
+                thead [
                     tr false [
                         th [ [ bold "Player" ] |> para theme paraDefaultSmallest ]
                         th []
@@ -543,7 +540,7 @@ let private renderPlayers (useDefaultTheme, playerDic:PlayerDic, squadId, squad,
                         th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                         th [] ] ]
                 tbody [ yield! playerRows ] ]
-        else yield [ str "Player details coming soon" ] |> para theme paraCentredSmaller ]    
+        else yield [ str "Player details coming soon" ] |> para theme paraCentredSmaller ]
 
 let private addPlayers theme squadId squad authUser dispatch =
     let nonWithdrawnCount = squad |> Some |> nonWithdrawnCount
@@ -609,7 +606,7 @@ let render (useDefaultTheme, state, authUser:AuthUser option, squadsProjection:P
             match hasModal, state.WithdrawPlayerState with
             | false, Some withdrawPlayerState ->
                 yield div divDefault [ lazyViewOrHMR2 renderWithdrawPlayerModal (useDefaultTheme, squadDic, withdrawPlayerState) (WithdrawPlayerInput >> dispatch) ]
-            | _ -> ()           
+            | _ -> ()
             match hasModal, state.EliminateSquadState with
             | false, Some eliminateSquadState ->
                 yield div divDefault [ lazyViewOrHMR2 renderEliminateSquadModal (useDefaultTheme, squadDic, eliminateSquadState) (EliminateSquadInput >> dispatch) ]
@@ -622,7 +619,7 @@ let render (useDefaultTheme, state, authUser:AuthUser option, squadsProjection:P
             match squadTabs with
             | _ :: _ ->
                 yield div divCentred [ tabs theme { tabsDefault with TabsSize = Normal ; Tabs = squadTabs } ]
-            | [] -> () // note: should never happen           
+            | [] -> () // note: should never happen
             match currentSquadId with
             | Some currentSquadId when currentSquadId |> squadDic.ContainsKey ->
                 let squad = squadDic.[currentSquadId]
@@ -631,5 +628,5 @@ let render (useDefaultTheme, state, authUser:AuthUser option, squadsProjection:P
                 yield lazyViewOrHMR2 renderSquad (useDefaultTheme, currentSquadId, squad, currentDraft, pickedCounts, userDraftPickDic, pendingPicks, userDic, fixtureDic, authUser) dispatch
                 yield br
                 yield lazyViewOrHMR2 renderPlayers (useDefaultTheme, squad.PlayerDic, currentSquadId, squad, currentDraft, pickedCounts, userDraftPickDic, pendingPicks, userDic, fixtureDic, authUser) dispatch
-                yield Rct.ofOption (addPlayers theme currentSquadId squad authUser dispatch)
+                yield RctH.ofOption (addPlayers theme currentSquadId squad authUser dispatch)
             | Some _ | None -> () ] // note: should never happen

@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.Drafts
+module Aornota.Sweepstake2019.Server.Agents.Projections.Drafts
 
 (* Broadcasts: SendMsg
    Subscribes: DraftsRead
@@ -7,21 +7,19 @@ module Aornota.Sweepstake2018.Server.Agents.Projections.Drafts
                UserDraftEventWritten  (UserDraftCreated | Drafted | Undrafted | PriorityChanged)
                ConnectionsSignedOut | Disconnected *)
 
-open Aornota.Common.Revision
-
-open Aornota.Server.Common.DeltaHelper
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.DraftEvents
-open Aornota.Sweepstake2018.Server.Events.UserDraftEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.DraftEvents
+open Aornota.Sweepstake2019.Server.Events.UserDraftEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -75,14 +73,14 @@ let private draftDto (draftId, draft:Draft) : DraftDto =
     let processingDetails =
         match draft.DraftStatus with
         | Processed ->
-            let userDraftPicks = draft.ProcessedUserDraftPicks |> List.map (fun (userId, userDraftPickDic) -> userId, userDraftPickDic |> userDraftPickDtos)       
+            let userDraftPicks = draft.ProcessedUserDraftPicks |> List.map (fun (userId, userDraftPickDic) -> userId, userDraftPickDic |> userDraftPickDtos)
             { UserDraftPicks = userDraftPicks ; ProcessingEvents = draft.ProcessingEvents |> List.rev } |> Some
-        | _ -> None    
+        | _ -> None
     { DraftId = draftId ; Rvn = draft.Rvn ; DraftOrdinal = draft.DraftOrdinal ; DraftStatus = draft.DraftStatus ; ProcessingDetails = processingDetails }
 
 let private draftDtoDic (draftDic:DraftDic) =
     let draftDtoDic = DraftDtoDic ()
-    draftDic |> List.ofSeq |> List.iter (fun (KeyValue (draftId, draft)) -> 
+    draftDic |> List.ofSeq |> List.iter (fun (KeyValue (draftId, draft)) ->
         let draftDto = (draftId, draft) |> draftDto
         (draftDto.DraftId, draftDto) |> draftDtoDic.Add)
     draftDtoDic
@@ -267,7 +265,7 @@ type Drafts () =
                                 | DraftPendingProcessing _ ->
                                     (match draft.DraftStatus with | Opened _ -> { draft with Rvn = rvn ; DraftStatus = PendingProcessing false } | _ -> draft), false
                                 | DraftProcessed _ ->
-                                    match draft.DraftStatus with                                   
+                                    match draft.DraftStatus with
                                     | PendingProcessing true ->
                                         // Note: When Draft changes to Processed, populate ProcessedUserDraftPickDics - then clear UserDraftDic and UserDraftLookupDic.
                                         let processedUserDraftPicks = userDraftDic |> List.ofSeq |> List.map (fun (KeyValue ((userId, _), userDraft)) ->
@@ -428,7 +426,7 @@ type Drafts () =
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnection"
                 sprintf "%s (%A) when projectingDrafts (%i draft/s) (%i current user draft/s) (%i projectee/s)" source connectionIds draftDic.Count userDraftDic.Count projecteeDic.Count |> Info |> log
-                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds                
+                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds
                 sprintf "%s when projectingDrafts -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 return! projectingDrafts state draftDic userDraftDic userDraftLookupDic projecteeDic
             | HandleInitializeDraftsProjectionQry (_, connectionId, userId, reply) ->
@@ -441,7 +439,7 @@ type Drafts () =
                 let draftDtos = state |> draftDtos
                 let currentUserDraftDto = state |> currentUserDraftDto userId
                 let result = (draftDtos, currentUserDraftDto) |> Ok
-                result |> logResult source (fun (draftDtos, currentUserDraftDto) -> sprintf "%i draft/s (%A)" draftDtos.Length currentUserDraftDto |> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (fun (draftDtos, currentUserDraftDto) -> sprintf "%i draft/s (%A)" draftDtos.Length currentUserDraftDto |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingDrafts state draftDic userDraftDic userDraftLookupDic projecteeDic }
         "agent instantiated -> awaitingStart" |> Info |> log

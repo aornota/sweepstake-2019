@@ -6,4 +6,5 @@ group server
 	Microsoft.AspNetCore.WebSockets
     Giraffe
     jose-jwt
+    TaskBuilder.fs
     Thoth.Json.Net

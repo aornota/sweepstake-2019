@@ -1,22 +1,21 @@
-module Aornota.Sweepstake2018.UI.Pages.News.State
+module Aornota.Sweepstake2019.Ui.Pages.News.State
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Json
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.UI.Common.LocalStorage
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.News.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Json
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.JsonConverter
+open Aornota.Sweepstake2019.Ui.Common.LocalStorage
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.News.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 
@@ -24,18 +23,18 @@ open Elmish
 
 open Fable.Core.JsInterop
 
-let [<Literal>] private NEWS_PREFERENCES_KEY = "sweepstake-2018-ui-news-preferences"
+let [<Literal>] private NEWS_PREFERENCES_KEY = "sweepstake-2019-ui-news-preferences"
 
 let private readPreferencesCmd =
     let readPreferences () = async {
-        return Key NEWS_PREFERENCES_KEY |> readJson |> Option.map (fun (Json json) -> json |> ofJson<DateTimeOffset>) }
-    Cmd.ofAsync readPreferences () (Ok >> ReadPreferencesResult) (Error >> ReadPreferencesResult)
+        return Key NEWS_PREFERENCES_KEY |> readJson |> Option.map (fun (Json json) -> json |> fromJson<DateTimeOffset>) }
+    Cmd.OfAsync.either readPreferences () (Ok >> ReadPreferencesResult) (Error >> ReadPreferencesResult)
 
 let private writePreferencesCmd state =
     let writePreferences (lastNewsSeen:DateTimeOffset) = async {
         do lastNewsSeen |> toJson |> Json |> writeJson (Key NEWS_PREFERENCES_KEY) }
     match state.LastNewsSeen with
-    | Some lastNewsSeen -> Cmd.ofAsync writePreferences lastNewsSeen (Ok >> WritePreferencesResult) (Error >> WritePreferencesResult)
+    | Some lastNewsSeen -> Cmd.OfAsync.either writePreferences lastNewsSeen (Ok >> WritePreferencesResult) (Error >> WritePreferencesResult)
     | None -> Cmd.none
 
 let initialize isCurrentPage readPreferences lastNewsSeen : State * Cmd<Input> =
@@ -206,7 +205,7 @@ let handleAddPostInput addPostInput (rvn, postDic, readyState) state : State * C
         let readyState = { readyState with AddPostState = addPostState |> Some }
         { state with NewsProjection = (rvn, postDic, readyState) |> Ready }, Cmd.none, true
     | AddPost, Some addPostState -> // note: assume no need to validate NewMessageText (i.e. because News.Render.renderAddPostModal will ensure that AddPost can only be dispatched when valid)
-        let addPostState = { addPostState with AddPostStatus = AddPostPending |> Some }   
+        let addPostState = { addPostState with AddPostStatus = AddPostPending |> Some }
         let readyState = { readyState with AddPostState = addPostState |> Some }
         let cmd = (addPostState.NewPostId, Standard, Markdown (addPostState.NewMessageText.Trim ())) |> CreatePostCmd |> UiAuthNewsMsg |> SendUiAuthMsg |> Cmd.ofMsg
         { state with NewsProjection = (rvn, postDic, readyState) |> Ready }, cmd, true
@@ -248,7 +247,7 @@ let handleEditPostInput editPostInput (rvn, postDic, readyState) state : State *
 let handleRemovePostInput removePostInput (rvn, postDic:PostDic, readyState) state : State * Cmd<Input> * bool =
     match removePostInput, readyState.RemovePostState with
     | ConfirmRemovePost, Some removePostState ->
-        let removePostState = { removePostState with RemovePostStatus = RemovePostPending |> Some }   
+        let removePostState = { removePostState with RemovePostStatus = RemovePostPending |> Some }
         let readyState = { readyState with RemovePostState = removePostState |> Some }
         let postId = removePostState.PostId
         let post = if postId |> postDic.ContainsKey then postDic.[postId] |> Some else None

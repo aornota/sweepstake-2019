@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.Users
+module Aornota.Sweepstake2019.Server.Agents.Projections.Users
 
 (* Broadcasts: SendMsg
    Subscribes: UsersRead
@@ -6,18 +6,16 @@ module Aornota.Sweepstake2018.Server.Agents.Projections.Users
                UserSignedIn | UserActivity | UserSignedOut
                ConnectionsSignedOut | Disconnected *)
 
-open Aornota.Common.Revision
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.Server.Common.DeltaHelper
-
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.UserEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.UserEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -48,7 +46,7 @@ type private State = { UserDic : UserDic }
 type private StateChangeType =
     | Initialization of userDic : UserDic
     | UserChange of userDic : UserDic * state : State
-  
+
 type private UserUnauthDtoDic = Dictionary<UserId, UserUnauthDto>
 type private UserDtoDic = Dictionary<UserId, UserDto>
 
@@ -166,7 +164,7 @@ type Users () =
                 let source = "OnUsersRead"
                 sprintf "%s (%i user/s) when pendingOnUsersRead" source usersRead.Length |> Info |> log
                 let userDic = UserDic ()
-                usersRead |> List.iter (fun userRead -> (userRead.UserId, { Rvn = userRead.Rvn ; UserName = userRead.UserName ; UserType = userRead.UserType ; LastActivity = None }) |> userDic.Add)           
+                usersRead |> List.iter (fun userRead -> (userRead.UserId, { Rvn = userRead.Rvn ; UserName = userRead.UserName ; UserType = userRead.UserType ; LastActivity = None }) |> userDic.Add)
                 let projecteeDic = ProjecteeDic ()
                 let state = userDic |> Initialization |> updateState source projecteeDic
                 return! projectingUsers state userDic projecteeDic
@@ -235,7 +233,7 @@ type Users () =
                 let source = "SignOutConnections"
                 sprintf "%s (%A) when projectingUsers (%i user/s) (%i projectee/s)" source connectionIds userDic.Count projecteeDic.Count |> Info |> log
                 connectionIds |> List.iter (fun connectionId ->
-                    if connectionId |> projecteeDic.ContainsKey then // note: silently ignore unknown connectionIds 
+                    if connectionId |> projecteeDic.ContainsKey then // note: silently ignore unknown connectionIds
                         let projectee = projecteeDic.[connectionId]
                         projecteeDic.[connectionId] <- { projectee with UserId = None })
                 return! projectingUsers state userDic projecteeDic
@@ -253,7 +251,7 @@ type Users () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingUsers -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = state |> usersProjectionUnauth |> Ok
-                result |> logResult source (fun userDtos -> sprintf "%i user/s" userDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (fun userDtos -> sprintf "%i user/s" userDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingUsers state userDic projecteeDic
             | HandleInitializeUsersProjectionAuthQry (connectionId, userId, reply) ->
@@ -264,7 +262,7 @@ type Users () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingUsers -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = state |> usersProjectionAuth userId |> Ok
-                result |> logResult source (fun userDtos -> sprintf "%i user/s" userDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (fun userDtos -> sprintf "%i user/s" userDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingUsers state userDic projecteeDic }
         "agent instantiated -> awaitingStart" |> Info |> log

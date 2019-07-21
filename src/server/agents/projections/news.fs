@@ -1,26 +1,25 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.News
+module Aornota.Sweepstake2019.Server.Agents.Projections.News
 
 (* Broadcasts: SendMsg
    Subscribes: NewsRead
                NewsEventWritten (PostCreated | PostChanged | PostRemoved)
                Disconnected *)
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
 
-open Aornota.Server.Common.DeltaHelper
-
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.NewsEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.NewsEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -36,7 +35,7 @@ type private NewsInput =
         * reply : AsyncReplyChannel<Result<PostDto list * bool, OtherError<string>>>
     | HandleMorePostsQry of connectionId : ConnectionId
         * reply : AsyncReplyChannel<Result<Rvn * PostDto list * bool, OtherError<string>>>
-    
+
 type private Post = { Ordinal : int ; Rvn : Rvn ; UserId : UserId ; PostTypeDto : PostTypeDto ; Timestamp : DateTimeOffset }
 type private PostDic = Dictionary<PostId, Post>
 
@@ -218,7 +217,7 @@ type News () =
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnections"
                 sprintf "%s (%A) when projectingNews (%i post/s) (%i projectee/s)" source connectionIds postDic.Count projecteeDic.Count |> Info |> log
-                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds                
+                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds
                 sprintf "%s when projectingNews -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 return! projectingNews state postDic projecteeDic
             | HandleInitializeNewsProjectionQry (connectionId, reply) ->
@@ -245,7 +244,7 @@ type News () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingNews -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = (initializedState |> postDtos, hasMorePosts) |> Ok
-                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingNews state postDic projecteeDic
             | HandleMorePostsQry (connectionId, reply) ->
@@ -262,8 +261,8 @@ type News () =
                             |> List.filter (fun (_, post) ->
                                 match projectee.MinPostOrdinal with
                                 | Some minPostOrdinal -> minPostOrdinal > post.Ordinal
-                                | None -> true) // note: should never happen                                   
-                            |> List.sortBy (fun (_, post) -> post.Ordinal) |> List.rev                       
+                                | None -> true) // note: should never happen
+                            |> List.sortBy (fun (_, post) -> post.Ordinal) |> List.rev
                         let morePosts, hasMorePosts =
                             if morePosts.Length <= POST_BATCH_SIZE then morePosts, false
                             else morePosts |> List.take POST_BATCH_SIZE, true
@@ -274,7 +273,7 @@ type News () =
                         let projectee = { projectee with LastRvn = incrementRvn projectee.LastRvn ; MinPostOrdinal = minPostOrdinal ; LastHasMorePosts = hasMorePosts }
                         projecteeDic.[connectionId] <- projectee
                         (projectee.LastRvn, postDtos, hasMorePosts) |> Ok
-                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingNews state postDic projecteeDic }
         "agent instantiated -> awaitingStart" |> Info |> log

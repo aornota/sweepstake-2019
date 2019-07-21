@@ -1,14 +1,13 @@
-module Aornota.Sweepstake2018.UI.Pages.Fixtures.Common
+module Aornota.Sweepstake2019.Ui.Pages.Fixtures.Common
 
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Shared
 
 type FixturesFilter =
     | AllFixtures

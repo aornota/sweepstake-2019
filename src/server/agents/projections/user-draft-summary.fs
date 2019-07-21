@@ -1,23 +1,21 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.UserDraftSummary
+module Aornota.Sweepstake2019.Server.Agents.Projections.UserDraftSummary
 
 (* Broadcasts: SendMsg
    Subscribes: UserDraftsRead
                UserDraftEventWritten (UserDraftCreated | Drafted | Undrafted)
                ConnectionsSignedOut | Disconnected *)
 
-open Aornota.Common.Revision
-
-open Aornota.Server.Common.DeltaHelper
-
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.UserDraftEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.UserDraftEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -155,7 +153,7 @@ type UserDraftSummary () =
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnection"
                 sprintf "%s (%A) when projectingUserDraftSummary (%i user draft/s) (%i projectee/s)" source connectionIds userDraftSummaryDic.Count projecteeDic.Count |> Info |> log
-                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds                
+                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds
                 sprintf "%s when projectingUserDraftSummary -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 return! projectingUserDraftSummary state userDraftSummaryDic projecteeDic
             | HandleInitializeUserDraftSummaryProjectionQry (_, connectionId, userId, reply) ->
@@ -166,7 +164,7 @@ type UserDraftSummary () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingUserDraftSummary -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = state |> userDraftSummaryDtos |> Ok
-                result |> logResult source (fun userDraftSummaryDtos -> sprintf "%i user draft/s" userDraftSummaryDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (fun userDraftSummaryDtos -> sprintf "%i user draft/s" userDraftSummaryDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingUserDraftSummary state userDraftSummaryDic projecteeDic }
         "agent instantiated -> awaitingStart" |> Info |> log

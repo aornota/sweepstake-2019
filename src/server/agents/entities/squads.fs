@@ -1,25 +1,23 @@
-module Aornota.Sweepstake2018.Server.Agents.Entities.Squads
+module Aornota.Sweepstake2019.Server.Agents.Entities.Squads
 
 (* Broadcasts: TODO:SendMsg
                SquadsRead
    Subscribes: SquadsEventsRead *)
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.Server.Common.Helpers
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Events.SquadEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.Helpers
+open Aornota.Sweepstake2019.Server.Events.SquadEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -39,7 +37,7 @@ type private SquadsInput =
         * reply : AsyncReplyChannel<Result<PlayerName, AuthCmdError<string>>>
     | HandleWithdrawPlayerCmd of token : WithdrawPlayerToken * auditUserId : UserId * squadId : SquadId * currentRvn : Rvn * playerId : PlayerId
         * reply : AsyncReplyChannel<Result<PlayerName, AuthCmdError<string>>>
-    | HandleEliminateSquadCmd of token : EliminateSquadToken * auditUserId : UserId * squadId : SquadId * currentRvn : Rvn 
+    | HandleEliminateSquadCmd of token : EliminateSquadToken * auditUserId : UserId * squadId : SquadId * currentRvn : Rvn
         * reply : AsyncReplyChannel<Result<SquadName, AuthCmdError<string>>>
 
 type private Player = { PlayerName : PlayerName ; PlayerType : PlayerType ; PlayerStatus : PlayerStatus }
@@ -80,27 +78,27 @@ let private applySquadEvent source idAndSquadResult (nextRvn, squadEvent:SquadEv
             ifDebug (sprintf "%s -> %A" squadIsFullText squadEvent) UNEXPECTED_ERROR |> otherError
         else if playerId |> squad.Players.ContainsKey then // note: should never happen
             ifDebug (sprintf "%A already exists for %A -> %A" playerId squadId squadEvent) UNEXPECTED_ERROR |> otherError
-        else 
+        else
             (playerId, { PlayerName = playerName ; PlayerType = playerType ; PlayerStatus = Active }) |> squad.Players.Add
             (squadId, { squad with Rvn = nextRvn } |> Some) |> Ok
     | Ok (squadId, Some squad), PlayerNameChanged (_, playerId, playerName) ->
         if playerId |> squad.Players.ContainsKey |> not then // note: should never happen
             ifDebug (sprintf "%A does not exist for %A -> %A" playerId squadId squadEvent) UNEXPECTED_ERROR |> otherError
-        else 
+        else
             let player = squad.Players.[playerId]
             squad.Players.[playerId] <- { player with PlayerName = playerName }
             (squadId, { squad with Rvn = nextRvn } |> Some) |> Ok
     | Ok (squadId, Some squad), PlayerTypeChanged (_, playerId, playerType) ->
         if playerId |> squad.Players.ContainsKey |> not then // note: should never happen
             ifDebug (sprintf "%A does not exist for %A -> %A" playerId squadId squadEvent) UNEXPECTED_ERROR |> otherError
-        else 
+        else
             let player = squad.Players.[playerId]
             squad.Players.[playerId] <- { player with PlayerType = playerType }
             (squadId, { squad with Rvn = nextRvn } |> Some) |> Ok
     | Ok (squadId, Some squad), PlayerWithdrawn (_, playerId, dateWithdrawn) ->
         if playerId |> squad.Players.ContainsKey |> not then // note: should never happen
             ifDebug (sprintf "%A does not exist for %A -> %A" playerId squadId squadEvent) UNEXPECTED_ERROR |> otherError
-        else 
+        else
             let player = squad.Players.[playerId]
             squad.Players.[playerId] <- { player with PlayerStatus = dateWithdrawn |> Withdrawn }
             (squadId, { squad with Rvn = nextRvn } |> Some) |> Ok
@@ -184,7 +182,7 @@ type Squads () =
                             |> List.map (fun (KeyValue (playerId, player)) ->
                                 { PlayerId = playerId ; PlayerName = player.PlayerName ; PlayerType = player.PlayerType ; PlayerStatus = player.PlayerStatus })
                         { SquadId = squadId ; Rvn = squad.Rvn ; SquadName = squad.SquadName ; Group = squad.Group ; Seeding = squad.Seeding ; CoachName = squad.CoachName ; Eliminated = squad.Eliminated ; PlayersRead = playersRead })
-                squadsRead |> SquadsRead |> broadcaster.Broadcast       
+                squadsRead |> SquadsRead |> broadcaster.Broadcast
                 return! managingSquads squads
             | HandleCreateSquadCmd _ -> "HandleCreateSquadCmd when pendingOnSquadsEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnSquadsEventsRead ()
             | HandleAddPlayerCmd _ -> "HandleAddPlayerCmd when pendingOnSquadsEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnSquadsEventsRead ()

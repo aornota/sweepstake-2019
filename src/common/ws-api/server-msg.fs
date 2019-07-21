@@ -1,15 +1,14 @@
-module Aornota.Sweepstake2018.Common.WsApi.ServerMsg
+module Aornota.Sweepstake2019.Common.WsApi.ServerMsg
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-
-open Aornota.Sweepstake2018.Common.Domain.Chat
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.Domain.Chat
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
 
 open System
 

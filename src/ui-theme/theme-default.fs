@@ -1,6 +1,6 @@
-module Aornota.UI.Theme.Default
+module Aornota.Sweepstake2019.Ui.Theme.Default
 
-open Aornota.UI.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Common
 
 let themeDefault = {
     ThemeClass = ThemeClass "default"

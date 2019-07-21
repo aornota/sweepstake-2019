@@ -1,4 +1,4 @@
-module Aornota.UI.Common.ShouldNeverHappen
+module Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
 
 let [<Literal>] SHOULD_NEVER_HAPPEN = "SHOULD NEVER HAPPEN"
 

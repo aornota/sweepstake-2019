@@ -1,8 +1,7 @@
-module Aornota.Sweepstake2018.Common.Domain.Chat
+module Aornota.Sweepstake2019.Common.Domain.Chat
 
-open Aornota.Common.Markdown
-
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Markdown
 
 open System
 

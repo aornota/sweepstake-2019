@@ -1,7 +1,7 @@
-module Aornota.Sweepstake2018.Server.Events.FixtureEvents
+module Aornota.Sweepstake2019.Server.Events.FixtureEvents
 
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
 
 open System
 

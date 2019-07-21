@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.Fixtures
+module Aornota.Sweepstake2019.Server.Agents.Projections.Fixtures
 
 (* Broadcasts: SendMsg
    Subscribes: FixturesRead
@@ -6,19 +6,17 @@ module Aornota.Sweepstake2018.Server.Agents.Projections.Fixtures
                SquadsRead
                Disconnected *)
 
-open Aornota.Common.Revision
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.Server.Common.DeltaHelper
-
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.FixtureEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.FixtureEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -33,7 +31,7 @@ type private FixtureInput =
     | RemoveConnections of connectionIds : ConnectionId list
     | HandleInitializeFixturesProjectionQry of connectionId : ConnectionId
         * reply : AsyncReplyChannel<Result<FixtureDto list, OtherError<string>>>
-    
+
 type private MatchEventDic = Dictionary<MatchEventId, MatchEvent>
 
 type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchEventDic : MatchEventDic }
@@ -186,7 +184,7 @@ let private fixtureDto (squadDic:SquadDic) (fixtureId, fixture:Fixture) : Fixtur
 
 let private fixtureDtoDic (squadDic:SquadDic) (fixtureDic:FixtureDic) =
     let fixtureDtoDic = FixtureDtoDic ()
-    fixtureDic |> List.ofSeq |> List.iter (fun (KeyValue (fixtureId, fixture)) -> 
+    fixtureDic |> List.ofSeq |> List.iter (fun (KeyValue (fixtureId, fixture)) ->
         let fixtureDto = (fixtureId, fixture) |> fixtureDto squadDic
         (fixtureDto.FixtureId, fixtureDto) |> fixtureDtoDic.Add)
     fixtureDtoDic
@@ -337,7 +335,7 @@ type Fixtures () =
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnections"
                 sprintf "%s (%A) when projectingFixtures (%i fixture/s) (%i projectee/s)" source connectionIds fixtureDic.Count projecteeDic.Count |> Info |> log
-                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds                
+                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds
                 sprintf "%s when projectingFixtures -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 return! projectingFixtures state fixtureDic projecteeDic
             | HandleInitializeFixturesProjectionQry (connectionId, reply) ->
@@ -348,7 +346,7 @@ type Fixtures () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingFixtures -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = state |> fixtureDtos |> Ok
-                result |> logResult source (fun fixtureDtos -> sprintf "%i fixture/s" fixtureDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (fun fixtureDtos -> sprintf "%i fixture/s" fixtureDtos.Length |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingFixtures state fixtureDic projecteeDic }
         "agent instantiated -> awaitingStart" |> Info |> log

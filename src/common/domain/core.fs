@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Common.Domain.Core
+module Aornota.Sweepstake2019.Common.Domain.Core
 
 open System
 

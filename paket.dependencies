@@ -27,6 +27,7 @@ group server
 	nuget Microsoft.AspNetCore.WebSockets
     nuget Giraffe
     nuget jose-jwt
+	nuget TaskBuilder.fs 1.1.1
     nuget Thoth.Json.Net prerelease
 
 group ui
@@ -37,6 +38,7 @@ group ui
 
     nuget Fable.Core prerelease
 	nuget Elmish.Toastr
+    nuget Fable.Browser.WebSocket prerelease
     nuget Fable.Elmish prerelease
 	nuget Fable.Elmish.Browser prerelease
     nuget Fable.Elmish.Debugger prerelease

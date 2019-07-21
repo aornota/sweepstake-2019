@@ -1,30 +1,28 @@
-module Aornota.Sweepstake2018.UI.Program.Render
+module Aornota.Sweepstake2019.Ui.Program.Render
 
-open Aornota.Common.Markdown
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.Render.Markdown
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages
-open Aornota.Sweepstake2018.UI.Program.Common
-open Aornota.Sweepstake2018.UI.Program.Markdown.Literals
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.Render.Markdown
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages
+open Aornota.Sweepstake2019.Ui.Program.Common
+open Aornota.Sweepstake2019.Ui.Program.Markdown.Literals
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.Squad // note: after Aornota.Sweepstake2019.Ui.Render.Bulma to avoid collision with Icon.Forward
+open Aornota.Sweepstake2019.Common.Domain.User // note: after Aornota.Sweepstake2019.Ui.Render.Bulma to avoid collision with Icon.Password
 
 open System
 
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 type private HeaderStatus = | ReadingPreferencesHS | ConnectingHS | ServiceUnavailableHS | SigningIn | SigningOut | NotSignedIn | SignedIn of authUser : AuthUser
 
@@ -141,7 +139,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
                     navbarDropDownItem theme isActive [ [ draftAdmin ] |> para theme paraDefaultSmallest ] |> Some
                 | None -> None
             let hasDropDown = match userAdmin, draftAdmin with | None, None -> false | _ -> true
-            if hasDropDown then navbarDropDown theme (icon iconAdminSmall) [ Rct.ofOption userAdmin ; Rct.ofOption draftAdmin ] |> Some
+            if hasDropDown then navbarDropDown theme (icon iconAdminSmall) [ RctH.ofOption userAdmin ; RctH.ofOption draftAdmin ] |> Some
             else None
         | ReadingPreferencesHS | ConnectingHS | ServiceUnavailableHS | SigningIn | SigningOut | NotSignedIn | SignedIn _ -> None
     let infoDropDown =
@@ -163,17 +161,17 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
     navbar theme navbarData [
         container (Fluid |> Some) [
             navbarBrand [
-                yield navbarItem [ image "public/resources/sweepstake-2018-24x24.png" (FixedSize Square24 |> Some) ]
+                yield navbarItem [ image "sweepstake-2019-24x24.png" (FixedSize Square24 |> Some) ]
                 yield navbarItem [ [ str SWEEPSTAKE_2018 ] |> para theme { paraCentredSmallest with ParaColour = SemanticPara Black ; Weight = Bold } ]
-                yield Rct.ofOption serverStarted
+                yield RctH.ofOption serverStarted
                 yield! statusInfo |> List.map (fun element -> navbarItem [ element ])
                 yield navbarBurger (fun _ -> ToggleNavbarBurger |> dispatch) navbarBurgerIsActive ]
             navbarMenu theme navbarData navbarBurgerIsActive [
                 navbarStart [
-                    yield Rct.ofOption authUserDropDown
+                    yield RctH.ofOption authUserDropDown
                     yield navbarItem [ tabs theme { tabsDefault with Tabs = pageTabs } ]
-                    yield Rct.ofOption adminDropDown
-                    yield Rct.ofOption infoDropDown ]
+                    yield RctH.ofOption adminDropDown
+                    yield RctH.ofOption infoDropDown ]
                 navbarEnd [
 #if TICK
                     navbarItem [ [ str (DateTimeOffset.UtcNow.LocalDateTime.ToString ("HH:mm:ss")) ] |> para theme { paraDefaultSmallest with ParaColour = GreyscalePara GreyDarker } ]
@@ -454,7 +452,7 @@ let private renderAuth (useDefaultTheme, authState, hasStaticModal, ticks) dispa
         | Ready (_, squadDic), Ready (_, draftDic, currentUserDraftDto) ->
             match draftDic |> currentDraft with
             | Some currentDraft ->
-                yield Rct.ofOption (currentDraftSummary useDefaultTheme authState.AuthUser currentDraft currentUserDraftDto squadDic dispatch)
+                yield RctH.ofOption (currentDraftSummary useDefaultTheme authState.AuthUser currentDraft currentUserDraftDto squadDic dispatch)
             | None -> ()
         match authState.CurrentPage with
         | UnauthPage NewsPage ->

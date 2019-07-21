@@ -1,27 +1,25 @@
-module Aornota.Sweepstake2018.UI.Pages.Fixtures.Render
+module Aornota.Sweepstake2019.Ui.Pages.Fixtures.Render
 
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.UI.Pages.Fixtures.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.JsonConverter
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.Fixtures.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
 
 open System
 
-open Fable.Core.JsInterop
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let private possibleParticipants unconfirmed (fixtureDic:FixtureDic) (squadDic:SquadDic) =
     match unconfirmed with
@@ -184,7 +182,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                         select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
                     divVerticalSpace 5
                 ]
-            interaction, contents       
+            interaction, contents
         | PenaltyEvent (opponentSquadId, opponentHasCleanSheet, playerId, penaltyType, savedBy) ->
             let scored, missed, saved = "Scored", "Missed", "Saved"
             let onScored = (fun _ -> PenaltyScored |> PenaltyTypeChanged |> dispatch)
@@ -198,7 +196,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     [
                         [ str "Please select the penalty type" ] |> para theme paraCentredSmaller
                         br
-                        field theme { fieldDefault with Grouped = Centred |> Some } (scoredRadio @ missedRadio @ savedRadio)
+                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
                         divVerticalSpace 5
                     ]
                 NotEnabled None, contents
@@ -212,7 +210,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     [
                         [ str "Please select the player who scored the penalty" ] |> para theme paraCentredSmaller
                         br
-                        field theme { fieldDefault with Grouped = Centred |> Some } (scoredRadio @ missedRadio @ savedRadio)
+                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
                         divVerticalSpace 5
                         field theme { fieldDefault with Grouped = Centred |> Some } [
                             select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
@@ -229,7 +227,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     [
                         [ str "Please select the player who missed the penalty" ] |> para theme paraCentredSmaller
                         br
-                        field theme { fieldDefault with Grouped = Centred |> Some } (scoredRadio @ missedRadio @ savedRadio)
+                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
                         divVerticalSpace 5
                         field theme { fieldDefault with Grouped = Centred |> Some } [
                             select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
@@ -248,7 +246,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     [
                         [ str "Please select the player who took the penalty and the player who saved the penalty" ] |> para theme paraCentredSmaller
                         br
-                        field theme { fieldDefault with Grouped = Centred |> Some } (scoredRadio @ missedRadio @ savedRadio)
+                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
                         divVerticalSpace 5
                         field theme { fieldDefault with Grouped = Centred |> Some } [
                             select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
@@ -289,7 +287,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     yield field theme { fieldDefault with Grouped = Centred |> Some } [
                         select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
                     yield divVerticalSpace 5
-                    yield field theme { fieldDefault with Grouped = Centred |> Some } (yellowRadio @ redRadio)
+                    yield field theme { fieldDefault with Grouped = Centred |> Some } [ yellowRadio ; redRadio ]
                     yield divVerticalSpace 5
                 ]
             interaction, contents
@@ -426,7 +424,7 @@ let private groupTabs currentFixturesFilter dispatch =
     | _ -> []
 
 // #region startsIn
-let private startsIn (_timestamp:DateTime) : Fable.Import.React.ReactElement option * bool =
+let private startsIn (_timestamp:DateTime) : Fable.React.ReactElement option * bool =
 #if TICK
     let startsIn, imminent = _timestamp |> startsIn
     (if imminent then bold startsIn else str startsIn) |> Some, imminent
@@ -457,7 +455,7 @@ let private confirmedFixtureDetails (squadDic:SquadDic) fixture =
                     homeSquadId |> Some, penaltyShootoutText |> Some
                 else if penaltyShootoutOutcome.AwayScore > penaltyShootoutOutcome.HomeScore then
                     let (SquadName squadName) = awaySquadId |> squadName squadDic
-                    let penaltyShootoutText = sprintf "%s win %i - %i on penalities" squadName penaltyShootoutOutcome.AwayScore penaltyShootoutOutcome.HomeScore                       
+                    let penaltyShootoutText = sprintf "%s win %i - %i on penalities" squadName penaltyShootoutOutcome.AwayScore penaltyShootoutOutcome.HomeScore
                     awaySquadId |> Some, penaltyShootoutText |> Some
                 else None, None // note: should never happen
             | None ->
@@ -513,7 +511,7 @@ let private teamEvents theme fixtureId role forSquadId hasShootout matchEvents c
         | Some (text, _), _ ->
             [ str text ] |> para theme paraEvent |> Some
         | _ -> None)
- 
+
 let private addLinks theme fixtureId role forSquadId opponentSquadId opponentGoals hasShootout matchEvents dispatch =
     let isHome = match role with | Home -> true | Away -> false
     let hasCleanSheet = matchEvents |> List.exists (fun (_, matchEvent) -> match matchEvent with | CleanSheet (squadId, _) when squadId = forSquadId -> true | _ -> false)
@@ -548,12 +546,12 @@ let private addLinks theme fixtureId role forSquadId opponentSquadId opponentGoa
             [ [ str "Add man-of-the-match" ] |> link theme (ClickableLink onClick) ] |> para theme paraEvent |> Some
         else None
     [
-        yield Rct.ofOption addGoal
-        yield Rct.ofOption addOwnGoal
+        yield RctH.ofOption addGoal
+        yield RctH.ofOption addOwnGoal
         yield addPenalty
         yield addCard
-        yield Rct.ofOption addCleanSheet
-        yield Rct.ofOption addManOfTheMatch
+        yield RctH.ofOption addCleanSheet
+        yield RctH.ofOption addManOfTheMatch
     ]
 
 let private renderFixture useDefaultTheme fixtureId (fixtureDic:FixtureDic) (squadDic:SquadDic) (_userDic:UserDic) authUser dispatch =
@@ -685,23 +683,23 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
         | Some (_, homeName, _, awayName), Some (homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, _, _, _) ->
             let home = if homeIsWinner then bold homeName else str homeName
             let homeGoals = sprintf "%i" homeGoals
-            let homeGoals = if homeIsWinner then bold homeGoals else str homeGoals           
+            let homeGoals = if homeIsWinner then bold homeGoals else str homeGoals
             let homeGoals = [ homeGoals ] |> para theme paraDefaultSmallest |> Some
             let away = if awayIsWinner then bold awayName else str awayName
             let awayGoals = sprintf "%i" awayGoals
-            let awayGoals = if awayIsWinner then bold awayGoals else str awayGoals           
+            let awayGoals = if awayIsWinner then bold awayGoals else str awayGoals
             let awayGoals = [ awayGoals ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } |> Some
             let penaltyShootout = match penaltyShootoutText with | Some penaltyShootoutText -> [ italic penaltyShootoutText ] |> para theme paraDefaultSmallest |> Some | None -> None
             home, homeGoals, str "-", away, awayGoals, penaltyShootout
         | _ ->
             let homeParticipant, awayParticipant = fixture.HomeParticipant, fixture.AwayParticipant
-            let home = 
+            let home =
                 match homeParticipant with
                 | Confirmed squadId ->
                     let (SquadName squadName) = squadId |> squadName squadDic
                     squadName
                 | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
-            let away = 
+            let away =
                 match awayParticipant with
                 | Confirmed squadId ->
                     let (SquadName squadName) = squadId |> squadName squadDic
@@ -729,16 +727,16 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
         tr false [
             td [ [ str date ] |> para theme paraDefaultSmallest ]
             td [ [ str time ] |> para theme paraDefaultSmallest ]
-            td [ Rct.ofOption (fixture.Stage |> stageElement) ]
-            td [ Rct.ofOption (confirmParticipant Home fixture.HomeParticipant fixtureId) ]
+            td [ RctH.ofOption (fixture.Stage |> stageElement) ]
+            td [ RctH.ofOption (confirmParticipant Home fixture.HomeParticipant fixtureId) ]
             td [ [ home ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-            td [ Rct.ofOption homeGoals ]
+            td [ RctH.ofOption homeGoals ]
             td [ [ vs ] |> para theme paraCentredSmallest ]
-            td [ Rct.ofOption awayGoals ]
+            td [ RctH.ofOption awayGoals ]
             td [ [ away ] |> para theme paraDefaultSmallest ]
-            td [ Rct.ofOption (confirmParticipant Away fixture.AwayParticipant fixtureId) ]
-            td [ Rct.ofOption penaltyShootout ]
-            td [ Rct.ofOption ((fixtureId, fixture) |> extra) ] ]   
+            td [ RctH.ofOption (confirmParticipant Away fixture.AwayParticipant fixtureId) ]
+            td [ RctH.ofOption penaltyShootout ]
+            td [ RctH.ofOption ((fixtureId, fixture) |> extra) ] ]
     let fixtures =
         fixtureDic
         |> List.ofSeq
@@ -748,7 +746,7 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
     let fixtureRows = fixtures |> List.map (fun (fixtureId, fixture) -> (fixtureId, fixture) |> fixtureRow)
     div divCentred [
         yield table theme false { tableDefault with IsNarrow = true } [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Date" ] |> para theme paraDefaultSmallest ]
                     th [ [ bold "Time" ] |> para theme paraDefaultSmallest ]
@@ -762,7 +760,7 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                     th []
                     th []
                     th [] ] ]
-            tbody [ yield! fixtureRows ] ] ]    
+            tbody [ yield! fixtureRows ] ] ]
 
 let render (useDefaultTheme, state, authUser:AuthUser option, fixturesProjection:Projection<_ * FixtureDic>, squadsProjection:Projection<_ * SquadDic>, usersProjection:Projection<_ * UserDic>, hasModal, ticks:int<tick>) dispatch =
     let theme = getTheme useDefaultTheme

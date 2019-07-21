@@ -1,4 +1,4 @@
-module Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
+module Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
 
 (* Broadcasts: N/A
    Subscribes: N/A *)
@@ -20,7 +20,7 @@ type Projection =
     | Drafts
     | UserDraftSummary
     | Chat
-  
+
 type Source =
     | ConsoleLogger
     | Broadcaster
@@ -132,7 +132,7 @@ let private log sourceFilter source category =
         | Some (prefixText, (foregroundColour, backgroundColor)) ->
             let previousBackgroundColour = Console.BackgroundColor
             Console.ForegroundColor <- foregroundColour
-            Console.BackgroundColor <- backgroundColor 
+            Console.BackgroundColor <- backgroundColor
             Console.Write prefixText
             Console.BackgroundColor <- previousBackgroundColour
             Console.Write " "

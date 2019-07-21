@@ -1,20 +1,18 @@
-module Aornota.Sweepstake2018.UI.Pages.Chat.Render
+module Aornota.Sweepstake2019.Ui.Pages.Chat.Render
 
-open Aornota.Common.Markdown
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.Render.Markdown
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.Chat
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.Chat.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Chat
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.Render.Markdown
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.Chat.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
 
 open System
 
@@ -26,7 +24,7 @@ let private (|Self|RecentlyActive|SignedIn|NotSignedIn|) (authUserId:UserId, use
     if userId = authUserId then Self
     else
         match userAuthDto.LastActivity with
-        | Some lastApi ->   
+        | Some lastApi ->
             let recentlyActiveCutoff = cutoff (int (RECENTLY_ACTIVE |> minutesToSeconds) * 1<second>)
             if lastApi > recentlyActiveCutoff then RecentlyActive else SignedIn
         | None -> NotSignedIn

@@ -1,4 +1,4 @@
-module Aornota.Common.UnitsOfMeasure
+module Aornota.Sweepstake2019.Common.UnitsOfMeasure
 
 type [<Measure>] tick
 

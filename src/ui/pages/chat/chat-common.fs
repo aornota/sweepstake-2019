@@ -1,16 +1,13 @@
-module Aornota.Sweepstake2018.UI.Pages.Chat.Common
+module Aornota.Sweepstake2019.Ui.Pages.Chat.Common
 
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-
-open Aornota.UI.Common.Notifications
-
-open Aornota.Sweepstake2018.Common.Domain.Chat
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Shared
-
+open Aornota.Sweepstake2019.Common.Domain.Chat
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 open System.Collections.Generic
@@ -50,6 +47,6 @@ type State = {
     AuthUser : AuthUser
     ChatProjection : Projection<Rvn * ChatMessageDic * ReadyState>
     PreferencesRead : bool
-    LastChatSeen : DateTimeOffset option    
+    LastChatSeen : DateTimeOffset option
     IsCurrentPage : bool
     UnseenCount : int }

@@ -1,26 +1,25 @@
-module Aornota.Sweepstake2018.UI.Pages.Drafts.Render
+module Aornota.Sweepstake2019.Ui.Pages.Drafts.Render
 
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Pages.Drafts.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
 
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.Drafts.Common
-open Aornota.Sweepstake2018.UI.Shared
-
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let private draftTabs drafts currentDraftId dispatch =
     drafts |> List.map (fun (draftId, draft) ->
         { IsActive = draftId = currentDraftId ; TabText = draft.DraftOrdinal |> draftText ; TabLinkType = ClickableLink (fun _ -> draftId |> ShowDraft |> dispatch ) })
 
 let private squadDescription (squadDic:SquadDic) squadId =
-    if squadId |> squadDic.ContainsKey then       
+    if squadId |> squadDic.ContainsKey then
         let squad = squadDic.[squadId]
         let (SquadName squadName), (CoachName coachName) = squad.SquadName, squad.CoachName
         sprintf "%s (%s)" squadName coachName
@@ -72,7 +71,7 @@ let private draftPickText (squadDic:SquadDic) draftPick =
 
 let private renderProcessingEvents theme processingEvents (userDic:UserDic) (squadDic:SquadDic) =
     let ignoredElements reason (ignored:(UserId * DraftPick list) list) =
-        let ignoredElement userName draftPick = 
+        let ignoredElement userName draftPick =
             [ str (sprintf "Removed %s for " (draftPick |> draftPickText squadDic)) ; bold userName ; str (sprintf ": %s" reason) ] |> para theme paraDefaultSmallest
         ignored
         |> List.map (fun (userId, draftPicks) -> userId |> userNameText userDic, draftPicks)
@@ -216,19 +215,19 @@ let private renderActiveDraft (useDefaultTheme, state, draftId, draft:Draft, isO
                 [ [ str (sprintf "Remove from %s" draftTextLower) ] |> button theme { buttonDangerSmall with Interaction = interaction } ] |> para theme paraDefaultSmallest |> Some
             else None
         tr false [
-            td [ Rct.ofOption increasePriorityButton ]
+            td [ RctH.ofOption increasePriorityButton ]
             td [ [ str (sprintf "#%i" rank) ] |> para theme paraCentredSmallest ]
-            td [ Rct.ofOption decreasePriorityButton ]
+            td [ RctH.ofOption decreasePriorityButton ]
             td [ description ]
-            td [ Rct.ofOption extra ]
-            td [ Rct.ofOption removeButton ]
-            td [ Rct.ofOption withdrawn ] ]
+            td [ RctH.ofOption extra ]
+            td [ RctH.ofOption removeButton ]
+            td [ RctH.ofOption withdrawn ] ]
     let userDraftPickRows =
         userDraftPickDic |> List.ofSeq |> List.sortBy (fun (KeyValue (_, rank)) -> rank) |> List.map (fun (KeyValue (userDraftPick, rank)) -> (userDraftPick, rank) |> userDraftPickRow)
     div divCentred [
         if userDraftPickDic.Count > 0 then
             yield table theme false { tableDefault with IsNarrow = true } [
-                thead [ 
+                thead [
                     tr false [
                         th []
                         th [ [ bold "Rank" ] |> para theme paraCentredSmallest ]

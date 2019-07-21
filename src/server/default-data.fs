@@ -1,23 +1,21 @@
-module Aornota.Sweepstake2018.Server.DefaultData
+module Aornota.Sweepstake2019.Server.DefaultData
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-
-open Aornota.Server.Common.Helpers
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Entities.Drafts
-open Aornota.Sweepstake2018.Server.Agents.Entities.Fixtures
-open Aornota.Sweepstake2018.Server.Agents.Entities.Squads
-open Aornota.Sweepstake2018.Server.Agents.Entities.Users
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Authorization
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Entities.Drafts
+open Aornota.Sweepstake2019.Server.Agents.Entities.Fixtures
+open Aornota.Sweepstake2019.Server.Agents.Entities.Squads
+open Aornota.Sweepstake2019.Server.Agents.Entities.Users
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.Helpers
 
 open System
 open System.IO
@@ -574,7 +572,7 @@ let private createInitialFixturesEventsIfNecessary = async {
         let saudiArabiaVsEgyptKO = (2018, 06, 25, 14, 00) |> dateTimeOffsetUtc
         let! result = nephTokens.CreateFixtureToken |> ifToken (fun token -> (token, nephId, fixtureId 34u, Group GroupA, Confirmed saudiArabiaId, Confirmed egyptId, saudiArabiaVsEgyptKO) |> fixtures.HandleCreateFixtureCmdAsync)
         result |> logShouldSucceed (sprintf "HandleCreateFixtureCmdAsync (match %i)" 34u)
-        
+
         // #endregion
         // #region: Group B
         let moroccoVsIranKO = (2018, 06, 15, 15, 00) |> dateTimeOffsetUtc

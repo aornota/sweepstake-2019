@@ -1,30 +1,23 @@
-module Aornota.Sweepstake2018.UI.Program.Run
+module Aornota.Sweepstake2019.Ui.Program.Run
 
 #if TICK
-open Aornota.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
 #endif
-
-#if TICK
-open Aornota.Sweepstake2018.UI.Program.Common
-#endif
-open Aornota.Sweepstake2018.UI.Program.Render
-open Aornota.Sweepstake2018.UI.Program.State
-
-open Aornota.UI.Common.Marked
+open Aornota.Sweepstake2019.Ui.Common.Marked
+open Aornota.Sweepstake2019.Ui.Program.Common
+open Aornota.Sweepstake2019.Ui.Program.Render
+open Aornota.Sweepstake2019.Ui.Program.State
 
 open Elmish
 #if DEBUG
 open Elmish.Debug
 #endif
-#if HMR
-open Elmish.HMR
-#endif
 open Elmish.React
+#if HMR
+open Elmish.HMR // note: needs to be last open Elmish.Xyz (see https://elmish.github.io/hmr/)
+#endif
 
 open Fable.Core.JsInterop
-#if TICK
-open Fable.Import
-#endif
 
 #if TICK
 let [<Literal>] private SECONDS_PER_TICK = 1<second/tick>
@@ -32,14 +25,14 @@ let [<Literal>] private SECONDS_PER_TICK = 1<second/tick>
 let private ticker dispatch =
     let secondsPerTick = if SECONDS_PER_TICK > 0<second/tick> then SECONDS_PER_TICK else 1<second/tick>
     let millisecondsPerTick = ((float secondsPerTick) * 1.<second/tick>) * MILLISECONDS_PER_SECOND
-    Browser.window.setInterval (fun _ -> 
+    Browser.Dom.window.setInterval (fun _ ->
         dispatch Tick
     , int millisecondsPerTick) |> ignore
 
 let private tickSubscription (_:State) = ticker |> Cmd.ofSub
 #endif
 
-Marked.Globals.marked.setOptions (unbox (createObj [ "sanitize" ==> true ])) |> ignore // note: "sanitize" ensures Html rendered as text
+Globals.marked.setOptions (unbox (createObj [ "sanitize" ==> true ])) |> ignore // note: "sanitize" ensures Html rendered as text
 
 Program.mkProgram initialize transition render
 #if TICK
@@ -48,11 +41,8 @@ Program.mkProgram initialize transition render
 #if DEBUG
 |> Program.withConsoleTrace
 #endif
-#if HMR
-|> Program.withHMR // note: HMR can cause weird behaviour if TICK is also defined
-#endif
-|> Program.withReact "elmish-app" // note: needs to match id of div in index.html
+|> Program.withReactSynchronous "elmish-app" // i.e. <div id="elmish-app"> in index.html
 #if DEBUG
-//|> Program.withDebugger // TODO-NMB-LOW: Uncomment once installed https://github.com/zalmoxisus/redux-devtools-extension?...
+// TEMP-NMB: Commented-out - else get Cannot generate auto encoder for Browser.Types.WebSocket errors...|> Program.withDebugger
 #endif
 |> Program.run

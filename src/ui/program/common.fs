@@ -1,21 +1,19 @@
-module Aornota.Sweepstake2018.UI.Program.Common
+module Aornota.Sweepstake2019.Ui.Program.Common
 
-open Aornota.Common.Revision
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.UI.Common.Notifications
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Pages
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 
-module Brw = Fable.Import.Browser
+open Browser.Types
 
 type UnauthPage =
     | NewsPage
@@ -94,7 +92,7 @@ type AuthInput =
 
 type AppInput =
     | ReadingPreferencesInput of result : Result<Preferences option, exn>
-    | ConnectingInput of ws : Brw.WebSocket
+    | ConnectingInput of ws : WebSocket
     | UnauthInput of unauthInput : UnauthInput
     | AuthInput of authInput : AuthInput
 
@@ -116,12 +114,12 @@ type Input =
 // #endregion
 
 type ConnectedState = {
-    Ws : Brw.WebSocket // TODO-NMB-MEDIUM: Switch to using Fable.Websockets.Elmish?...
+    Ws : WebSocket // TODO-NMB-MEDIUM: Switch to using Fable.Websockets.Elmish?...
     ServerStarted : DateTimeOffset }
 
 type ConnectionState =
     | NotConnected
-    | InitializingConnection of ws : Brw.WebSocket
+    | InitializingConnection of ws : WebSocket
     | Connected of connectedState : ConnectedState
 
 type SignInStatus =
@@ -207,4 +205,4 @@ type State = {
     ConnectionState : ConnectionState
     AppState : AppState }
 
-let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2018 (ε)"
+let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2019 (α)"

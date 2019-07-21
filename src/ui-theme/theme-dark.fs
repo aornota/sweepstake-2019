@@ -1,6 +1,6 @@
-module Aornota.UI.Theme.Dark
+module Aornota.Sweepstake2019.Ui.Theme.Dark
 
-open Aornota.UI.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Common
 
 let private transformSemantic semantic = match semantic with | Black -> White | Dark -> Light | Light -> Dark | White -> Black | _ -> semantic
 

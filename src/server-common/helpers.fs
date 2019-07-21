@@ -1,4 +1,4 @@
-module Aornota.Server.Common.Helpers
+module Aornota.Sweepstake2019.Server.Common.Helpers
 
 open System
 

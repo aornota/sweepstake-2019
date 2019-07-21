@@ -1,17 +1,15 @@
-module Aornota.Sweepstake2018.UI.Pages.UserAdmin.State
+module Aornota.Sweepstake2019.Ui.Pages.UserAdmin.State
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.UserAdmin.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.UserAdmin.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 
@@ -127,7 +125,7 @@ let private handleCreateUsersInput createUsersInput userDic state : State * Cmd<
         let createUsersState = { createUsersState with NewUserType = newUserType }
         { state with CreateUsersState = createUsersState |> Some }, Cmd.none, true
     | CreateUser, Some createUsersState -> // note: assume no need to validate NewUserNameText or NewPasswordText or ConfirmPasswordText (i.e. because UserAdmin.Render.renderCreateUsersModal will ensure that CreateUser can only be dispatched when valid)
-        let createUsersState = { createUsersState with CreateUserStatus = CreateUserPending |> Some }   
+        let createUsersState = { createUsersState with CreateUserStatus = CreateUserPending |> Some }
         let createUserCmdParams =
             createUsersState.NewUserId, UserName (createUsersState.NewUserNameText.Trim ()), Password (createUsersState.NewPasswordText.Trim ()), createUsersState.NewUserType
         let cmd = createUserCmdParams |> CreateUserCmd |> UiAuthUserAdminMsg |> SendUiAuthMsg |> Cmd.ofMsg
@@ -155,7 +153,7 @@ let private handleResetPasswordInput resetPasswordInput userDic state : State * 
         let resetPasswordState = { resetPasswordState with ConfirmPasswordText = confirmPasswordText ; ConfirmPasswordErrorText = confirmPasswordErrorText }
         { state with ResetPasswordState = resetPasswordState |> Some }, Cmd.none, true
     | ResetPassword, Some resetPasswordState -> // note: assume no need to validate NewUserNameText or NewPasswordText or ConfirmPasswordText (i.e. because UserAdmin.Render.renderCreateUsersModal will ensure that CreateUser can only be dispatched when valid)
-        let resetPasswordState = { resetPasswordState with ResetPasswordStatus = ResetPasswordPending |> Some }   
+        let resetPasswordState = { resetPasswordState with ResetPasswordStatus = ResetPasswordPending |> Some }
         let userId = resetPasswordState.UserId
         let currentRvn = userId |> userRvnOrInitial userDic
         let resetPasswordCmdParams = userId, currentRvn, Password (resetPasswordState.NewPasswordText.Trim ())
@@ -178,7 +176,7 @@ let private handleChangeUserTypeInput changeUserTypeInput userDic state : State 
     | ChangeUserType, Some changeUserTypeState -> // note: assume no need to validate UserType (i.e. because UserAdmin.Render.renderChangeUserTypeModal will ensure that ChangeUserType can only be dispatched when valid)
         match changeUserTypeState.UserType with
         | Some userType ->
-            let changeUserTypeState = { changeUserTypeState with ChangeUserTypeStatus = ChangeUserTypePending |> Some }   
+            let changeUserTypeState = { changeUserTypeState with ChangeUserTypeStatus = ChangeUserTypePending |> Some }
             let userId = changeUserTypeState.UserId
             let currentRvn = userId |> userRvnOrInitial userDic
             let changeUserTypeCmdParams = userId, currentRvn, userType

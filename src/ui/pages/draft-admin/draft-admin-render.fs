@@ -1,20 +1,19 @@
-module Aornota.Sweepstake2018.UI.Pages.DraftAdmin.Render
+module Aornota.Sweepstake2019.Ui.Pages.DraftAdmin.Render
 
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.DraftAdmin.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Shared
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
 
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.DraftAdmin.Common
-open Aornota.Sweepstake2018.UI.Shared
-
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let private renderProcessDraftModal (useDefaultTheme, draftDic:DraftDic, processDraftState:ProcessDraftState) dispatch =
     let theme = getTheme useDefaultTheme
@@ -86,17 +85,17 @@ let private renderDrafts (useDefaultTheme, draftDic:DraftDic, authUser) dispatch
                 None, status |> Some, None, None
             | _ -> None, None, None, None
         tr false [
-            td [ Rct.ofOption draftOrdinal ]
-            td [ Rct.ofOption status ]
-            td [ Rct.ofOption starts ]
-            td [ Rct.ofOption ends ]
-            td [ Rct.ofOption ((draftId, draft) |> processDraft) ] ]
+            td [ RctH.ofOption draftOrdinal ]
+            td [ RctH.ofOption status ]
+            td [ RctH.ofOption starts ]
+            td [ RctH.ofOption ends ]
+            td [ RctH.ofOption ((draftId, draft) |> processDraft) ] ]
     let drafts = draftDic |> List.ofSeq |> List.map (fun (KeyValue (draftId, draft)) -> draftId, draft) |> List.sortBy (fun (_, draft) -> draft.DraftOrdinal)
     let draftRows = drafts |> List.map draftRow
     div divCentred [
         if draftDic.Count > 0 then
             yield table theme false { tableDefault with IsNarrow = true ; IsFullWidth = true } [
-                thead [ 
+                thead [
                     tr false [
                         th [ [ bold "Draft" ] |> para theme paraCentredSmallest ]
                         th [ [ bold "Status" ] |> para theme paraDefaultSmallest ]
@@ -132,7 +131,7 @@ let private activeDraftSummary useDefaultTheme (userDraftProjection:Projection<_
                 if userDraftSummaries.Length > 0 then
                     yield div divCentred [
                         table theme false { tableDefault with IsNarrow = true } [
-                            thead [ 
+                            thead [
                                 tr false [
                                     th [ [ bold "User" ] |> para theme paraDefaultSmallest ]
                                     th [ [ bold "Selections" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]

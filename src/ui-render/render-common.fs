@@ -1,9 +1,9 @@
-module Aornota.UI.Render.Common
+module Aornota.Sweepstake2019.Ui.Render.Common
 
-module Rct = Fable.Helpers.React
-open Fable.Helpers.React.Props
-open Fable.Import.React
-open Fable.PowerPack
+open Browser.Types
+
+open Fable.React
+open Fable.React.Props
 
 type Alignment = | Centred | LeftAligned | RightAligned | Justified | FullWidth
 
@@ -12,6 +12,8 @@ type DivData = {
     IsCentred : bool
     PadV : int option
     PadH : int option }
+
+let [<Literal>] private KEYBOARD_CODE__ENTER = 13.
 
 let [<Literal>] CENTRED_CLASS = "centered" (* sic *)
 let [<Literal>] SPACE = " "
@@ -25,20 +27,20 @@ let private padStyle padV padH =
         | None, None -> "0 0"
     Style [ Padding padding ]
 
-let str text = Rct.str text
+let str text = str text
 
-let bold text = Rct.b [] [ str text ]
+let bold text = b [] [ str text ]
 
-let italic text = Rct.i [] [ str text ]
+let italic text = i [] [ str text ]
 
-let br = Rct.br []
+let br = br []
 
 let div divData children =
     let customClasses = [
         match divData.DivCustomClass with | Some divCustomClass -> yield divCustomClass | None -> ()
         if divData.IsCentred then yield CENTRED_CLASS ]
     let customClass = match customClasses with | _ :: _ -> Some (ClassName (String.concat SPACE customClasses)) | [] -> None
-    Rct.div [
+    div [
         match customClass with | Some customClass -> yield customClass :> IHTMLProp | None -> ()
         yield padStyle divData.PadV divData.PadH :> IHTMLProp
     ] children
@@ -53,7 +55,7 @@ let divEmpty = div divDefault []
 let onEnterPressed onEnter =
     OnKeyDown (fun (ev:KeyboardEvent) ->
         match ev with
-        | _ when ev.keyCode = Keyboard.Codes.enter ->
+        | _ when ev.keyCode = KEYBOARD_CODE__ENTER ->
             ev.preventDefault ()
             onEnter ()
         | _ -> ())

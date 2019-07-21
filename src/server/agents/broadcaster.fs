@@ -1,10 +1,10 @@
-module Aornota.Sweepstake2018.Server.Agents.Broadcaster
+module Aornota.Sweepstake2019.Server.Agents.Broadcaster
 
 (* Broadcasts: N/A
    Subscribes: N/A *)
 
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic

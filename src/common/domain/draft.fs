@@ -1,10 +1,9 @@
-module Aornota.Sweepstake2018.Common.Domain.Draft
+module Aornota.Sweepstake2019.Common.Domain.Draft
 
-open Aornota.Common.Revision
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Revision
 
 open System
 

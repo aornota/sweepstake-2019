@@ -2,6 +2,7 @@ group ui
 
     Fable.Core
 	Elmish.Toastr
+    Fable.Browser.WebSocket
     Fable.Elmish
 	Fable.Elmish.Browser
     Fable.Elmish.Debugger

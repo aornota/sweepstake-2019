@@ -1,18 +1,17 @@
-module Aornota.Sweepstake2018.UI.Pages.Fixtures.State
+module Aornota.Sweepstake2019.Ui.Pages.Fixtures.State
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.Fixture
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.Fixtures.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Fixture
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.JsonConverter
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.Fixtures.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open Elmish
 
@@ -96,12 +95,12 @@ let private handleConfirmParticipantInput confirmParticipantInput (fixtureDic:Fi
         let squadId =
             if squadIdJson |> String.IsNullOrWhiteSpace then None
             else
-                try squadIdJson |> ofJson<SquadId> |> Some
+                try squadIdJson |> fromJson<SquadId> |> Some
                 with _ -> None
         let confirmParticipantState = { confirmParticipantState with SquadId = squadId }
         { state with ConfirmParticipantState = confirmParticipantState |> Some }, Cmd.none, true
     | ConfirmConfirmParticipant, Some confirmParticipantState ->
-        let confirmParticipantState = { confirmParticipantState with ConfirmParticipantStatus = ConfirmParticipantPending |> Some }   
+        let confirmParticipantState = { confirmParticipantState with ConfirmParticipantStatus = ConfirmParticipantPending |> Some }
         let fixtureId, role, squadId = confirmParticipantState.FixtureId, confirmParticipantState.Role, confirmParticipantState.SquadId
         let currentRvn = if fixtureId |> fixtureDic.ContainsKey then fixtureDic.[fixtureId].Rvn else initialRvn
         match squadId with
@@ -124,7 +123,7 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
         let playerId =
             if playerIdJson |> String.IsNullOrWhiteSpace then None
             else
-                try playerIdJson |> ofJson<PlayerId> |> Some
+                try playerIdJson |> fromJson<PlayerId> |> Some
                 with _ -> None
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
@@ -147,7 +146,7 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
         let assistedBy =
             if playerIdJson |> String.IsNullOrWhiteSpace then None
             else
-                try playerIdJson |> ofJson<PlayerId> |> Some
+                try playerIdJson |> fromJson<PlayerId> |> Some
                 with _ -> None
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
@@ -178,7 +177,7 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
         let savedBy =
             if playerIdJson |> String.IsNullOrWhiteSpace then None
             else
-                try playerIdJson |> ofJson<PlayerId> |> Some
+                try playerIdJson |> fromJson<PlayerId> |> Some
                 with _ -> None
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
@@ -270,7 +269,7 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
             | _ -> None
         match matchEvent with
         | Some matchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEventStatus = AddMatchEventPending |> Some }   
+            let addMatchEventState = { addMatchEventState with AddMatchEventStatus = AddMatchEventPending |> Some }
             let cmd = (fixtureId, currentRvn, matchEvent) |> AddMatchEventCmd |> UiAuthFixturesMsg |> SendUiAuthMsg |> Cmd.ofMsg
             { state with AddMatchEventState = addMatchEventState |> Some }, cmd, true
         | None ->
@@ -287,7 +286,7 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
 let private handleRemoveMatchEventInput removeMatchEventInput (fixtureDic:FixtureDic) state : State * Cmd<Input> * bool =
     match removeMatchEventInput, state.RemoveMatchEventState with
     | RemoveMatchEvent, Some removeMatchEventState ->
-        let removeMatchEventState = { removeMatchEventState with RemoveMatchEventStatus = RemoveMatchEventPending |> Some }   
+        let removeMatchEventState = { removeMatchEventState with RemoveMatchEventStatus = RemoveMatchEventPending |> Some }
         let fixtureId, matchEventId, matchEvent = removeMatchEventState.FixtureId, removeMatchEventState.MatchEventId, removeMatchEventState.MatchEvent
         let currentRvn = if fixtureId |> fixtureDic.ContainsKey then fixtureDic.[fixtureId].Rvn else initialRvn
         let cmd = (fixtureId, currentRvn, matchEventId, matchEvent) |> RemoveMatchEventCmd |> UiAuthFixturesMsg |> SendUiAuthMsg |> Cmd.ofMsg

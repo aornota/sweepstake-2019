@@ -1,25 +1,23 @@
-module Aornota.Sweepstake2018.Server.Agents.Entities.News
+module Aornota.Sweepstake2019.Server.Agents.Entities.News
 
 (* Broadcasts: TODO:SendMsg
                NewsRead
    Subscribes: NewsEventsRead *)
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.Server.Common.Helpers
-
-open Aornota.Sweepstake2018.Common.Domain.News
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Events.NewsEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.News
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.Helpers
+open Aornota.Sweepstake2019.Server.Events.NewsEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -130,7 +128,7 @@ type News () =
                     |> List.ofSeq
                     |> List.map (fun (KeyValue (postId, post)) ->
                         { PostId = postId ; Rvn = post.Rvn ; UserId = post.UserId ; PostType = post.PostType ; MessageText = post.MessageText ; Timestamp = post.Timestamp ; Removed = post.Removed })
-                newsRead |> NewsRead |> broadcaster.Broadcast       
+                newsRead |> NewsRead |> broadcaster.Broadcast
                 return! managingNews posts
             | HandleCreatePostCmd _ -> "HandleCreatePostCmd when pendingOnNewsEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnNewsEventsRead ()
             | HandleChangePostCmd _ -> "HandleChangePostCmd when pendingOnNewsEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnNewsEventsRead ()

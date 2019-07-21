@@ -1,24 +1,23 @@
-module Aornota.Sweepstake2018.UI.Pages.Scores.Render
+module Aornota.Sweepstake2019.Ui.Pages.Scores.Render
 
-open Aornota.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Ui.Common.LazyViewOrHMR
+open Aornota.Sweepstake2019.Ui.Common.TimestampHelper
+open Aornota.Sweepstake2019.Ui.Pages.Scores.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
+open Aornota.Sweepstake2019.Ui.Theme.Common
+open Aornota.Sweepstake2019.Ui.Theme.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Theme.Shared
+open Aornota.Sweepstake2019.Common.Domain.Squad // note: after Aornota.Sweepstake2019.Ui.Render.Bulma to avoid collision with Icon.Forward
+open Aornota.Sweepstake2019.Ui.Shared // note: after Aornota.Sweepstake2019.Common.Domain.Squad to avoid collition with Squad[Only]Dto
 
-open Aornota.UI.Common.LazyViewOrHMR
-open Aornota.UI.Common.TimestampHelper
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
-open Aornota.UI.Theme.Common
-open Aornota.UI.Theme.Render.Bulma
-open Aornota.UI.Theme.Shared
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.UI.Pages.Scores.Common
-open Aornota.Sweepstake2018.UI.Shared
 open System
 
-module Rct = Fable.Helpers.React
+module RctH = Fable.React.Helpers
 
 let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, squadDic:SquadDic, fixtureDic:FixtureDic) dispatch =
     let theme = getTheme useDefaultTheme
@@ -89,16 +88,16 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                     else None
                 | None -> None
             tr false [
-                td [ Rct.ofOption payout ]
+                td [ RctH.ofOption payout ]
                 td [ [ italic rankText ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-                td [ Rct.ofOption rankChange ]
+                td [ RctH.ofOption rankChange ]
                 td [ [ [ str userName ] |> para theme paraDefaultSmallest ] |> link theme (ClickableLink onClick) ]
-                td [ Rct.ofOption squad ]
-                td [ Rct.ofOption eliminated ]
+                td [ RctH.ofOption squad ]
+                td [ RctH.ofOption eliminated ]
                 td [ [ str formation ] |> para theme paraCentredSmallest ]
                 td [ [ str (sprintf "%i" playersRemaining ) ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-                td [ Rct.ofOption pointsChange ] ]
+                td [ RctH.ofOption pointsChange ] ]
         let resultKickOffs = fixtureDic |> List.ofSeq |> List.choose (fun (KeyValue (_, fixture)) -> match fixture.MatchResult with | Some _ -> fixture.KickOff |> Some | None -> None)
         let latestResult = match resultKickOffs with | _ :: _ -> resultKickOffs |> List.max |> Some | [] -> None
         let previousRankAndPoints =
@@ -139,7 +138,7 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                                     previousRank <- i + 1
                                     previousPoints <- points |> Some
                                     i + 1
-                            rank               
+                            rank
                     rank, userId, points)
             | None -> []
         let previousRankAndPoints forUserId =
@@ -198,7 +197,7 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
         let userCount = users.Length
         let userRows = users |> List.map (userRow userCount)
         yield table theme false { tableDefault with IsNarrow = true ; IsFullWidth = true } [
-            thead [ 
+            thead [
                 tr false [
                     th []
                     th []
@@ -285,7 +284,7 @@ let private renderSweepstakerSquad (useDefaultTheme, userId, squadId, squad, dra
         let points, pickedByPoints = teamPoints fixtureDic squadId (timestamp |> Some)
         let score = score points pickedByPoints (userId |> Some) userDic
         yield table theme false { tableDefault with IsNarrow = true } [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
                     th []
@@ -296,10 +295,10 @@ let private renderSweepstakerSquad (useDefaultTheme, userId, squadId, squad, dra
             tbody [
                 tr false [
                     td [ [ str squadName ] |> para theme paraDefaultSmallest ]
-                    td [ Rct.ofOption eliminated ]
+                    td [ RctH.ofOption eliminated ]
                     td [ [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest ]
                     td [ [ str coachName ] |> para theme paraDefaultSmallest ]
-                    td [ Rct.ofOption ((draftOrdinal, timestamp) |> pickedIn theme) ]
+                    td [ RctH.ofOption ((draftOrdinal, timestamp) |> pickedIn theme) ]
                     td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ] ] ]
 
 let private renderSweepstakerPlayers (useDefaultTheme, userId, players:(SquadId * Squad * PlayerId * Player * DraftOrdinal option * DateTimeOffset) list, userDic:UserDic, fixtureDic:FixtureDic) =
@@ -308,7 +307,7 @@ let private renderSweepstakerPlayers (useDefaultTheme, userId, players:(SquadId 
         let playerRow (squadId, squad, playerId, player, draftOrdinal, timestamp) =
             let (SquadName squadName), (PlayerName playerName), playerTypeText = squad.SquadName, player.PlayerName, player.PlayerType |> playerTypeText
             let withdrawn =
-                    match player.PlayerStatus with 
+                    match player.PlayerStatus with
                     | Withdrawn _ -> [ [ str "Withdrawn" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some
                     | Active -> None
             let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
@@ -316,11 +315,11 @@ let private renderSweepstakerPlayers (useDefaultTheme, userId, players:(SquadId 
             let score = score points pickedByPoints (userId |> Some) userDic
             tr false [
                 td [ [ str playerName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption withdrawn ]
+                td [ RctH.ofOption withdrawn ]
                 td [ [ str squadName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption eliminated ]
+                td [ RctH.ofOption eliminated ]
                 td [ [ str playerTypeText ] |> para theme paraCentredSmallest ]
-                td [ Rct.ofOption ((draftOrdinal, timestamp) |> pickedIn theme) ]
+                td [ RctH.ofOption ((draftOrdinal, timestamp) |> pickedIn theme) ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ]
         let players =
             players |> List.sortBy (fun (_, squad, _, player, _, _) ->
@@ -328,7 +327,7 @@ let private renderSweepstakerPlayers (useDefaultTheme, userId, players:(SquadId 
                 active, player.PlayerType, squad.SquadName, player.PlayerName)
         let playerRows = players |> List.map playerRow
         yield table theme false { tableDefault with IsNarrow = true } [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Player" ] |> para theme paraDefaultSmallest ]
                     th []
@@ -361,10 +360,10 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
             let score = score points pickedByPoints pickedByUserId userDic
             tr false [
                 td [ [ str squadName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption eliminated ]
+                td [ RctH.ofOption eliminated ]
                 td [ [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest ]
                 td [ [ str coachName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption pickedByTag ]
+                td [ RctH.ofOption pickedByTag ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ]
         let squads =
             squadDic |> List.ofSeq |> List.map (fun (KeyValue (squadId, squad)) -> squadId, squad)
@@ -378,13 +377,13 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
         let squadRows = squads |> List.map squadRow
         let pickedByHeader = if unpickedOnly |> not then [ bold "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
         yield table theme false { tableDefault with IsNarrow = true} [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
                     th []
                     th [ [ bold "Seeding" ] |> para theme paraCentredSmallest ]
                     th [ [ bold "Coach" ] |> para theme paraDefaultSmallest ]
-                    th [ Rct.ofOption pickedByHeader ]
+                    th [ RctH.ofOption pickedByHeader ]
                     th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
             tbody [ yield! squadRows ] ] ]
 
@@ -394,7 +393,7 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
         let playerRow (squad, player, points, pickedByPoints, pickedByUserId) =
             let (SquadName squadName), (PlayerName playerName) = squad.SquadName, player.PlayerName
             let withdrawn =
-                    match player.PlayerStatus with 
+                    match player.PlayerStatus with
                     | Withdrawn _ -> [ [ str "Withdrawn" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some
                     | Active -> None
             let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
@@ -403,11 +402,11 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
             let score = score points pickedByPoints pickedByUserId userDic
             tr false [
                 td [ [ str playerName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption withdrawn ]
+                td [ RctH.ofOption withdrawn ]
                 td [ [ str squadName ] |> para theme paraDefaultSmallest ]
-                td [ Rct.ofOption eliminated ]
-                td [ Rct.ofOption playerTypeText ]
-                td [ Rct.ofOption pickedByTag ]
+                td [ RctH.ofOption eliminated ]
+                td [ RctH.ofOption playerTypeText ]
+                td [ RctH.ofOption pickedByTag ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ]
         let squads = squadDic |> List.ofSeq |> List.map (fun (KeyValue (squadId, squad)) -> squadId, squad)
         let players =
@@ -425,17 +424,17 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
                 let active = match squad.Eliminated, player.PlayerStatus with | true, _ -> 1 | false, Withdrawn _ -> 1 | false, Active -> 0
                 -points, active, squad.SquadName, player.PlayerName)
         let playerRows = players |> List.map playerRow
-        let playerTypeHeader = match playerType with | Some _ -> None | None -> [ bold "Position" ] |> para theme paraCentredSmallest |> Some        
+        let playerTypeHeader = match playerType with | Some _ -> None | None -> [ bold "Position" ] |> para theme paraCentredSmallest |> Some
         let pickedByHeader = if unpickedOnly |> not then [ bold "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
         yield table theme false { tableDefault with IsNarrow = true } [
-            thead [ 
+            thead [
                 tr false [
                     th [ [ bold "Player" ] |> para theme paraDefaultSmallest ]
                     th []
                     th [ [ bold "Team" ] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ Rct.ofOption playerTypeHeader ]
-                    th [ Rct.ofOption pickedByHeader ]
+                    th [ RctH.ofOption playerTypeHeader ]
+                    th [ RctH.ofOption pickedByHeader ]
                     th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
             tbody [ yield! playerRows ] ] ]
 

@@ -1,6 +1,6 @@
-module Aornota.Sweepstake2018.Server.Authorization
+module Aornota.Sweepstake2019.Server.Authorization
 
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.User
 
 type MetaToken = private | MetaToken
 
@@ -20,12 +20,12 @@ type ChangeUserTypeToken private (userTarget, userTypes) =
     member __.UserTypes = userTypes
 
 type DraftAdminToken private () =
-    new (_:MetaToken) = DraftAdminToken ()   
+    new (_:MetaToken) = DraftAdminToken ()
 type ProcessDraftToken private () =
     new (_:MetaToken) = ProcessDraftToken ()
 
 type ResultsAdminToken private () =
-    new (_:MetaToken) = ResultsAdminToken ()   
+    new (_:MetaToken) = ResultsAdminToken ()
 
 type CreatePostToken private () =
     new (_:MetaToken) = CreatePostToken ()
@@ -43,7 +43,7 @@ type WithdrawPlayerToken private () =
     new (_:MetaToken) = WithdrawPlayerToken ()
 type EliminateSquadToken private () =
     new (_:MetaToken) = EliminateSquadToken ()
-    
+
 type CreateFixtureToken private () =
     new (_:MetaToken) = CreateFixtureToken ()
 type ConfirmFixtureToken private () =
@@ -124,7 +124,7 @@ type UserTokens private (vut:ValidatedUserTokens) =
                 let createFixtureToken = if fixturePermissions.CreateFixturePermission then MetaToken |> CreateFixtureToken |> Some else None
                 let confirmFixtureToken = if fixturePermissions.ConfirmFixturePermission then MetaToken |> ConfirmFixtureToken |> Some else None
                 createFixtureToken, confirmFixtureToken
-            | None -> None, None        
+            | None -> None, None
         let draftToken = match permissions.DraftPermission with | Some userId -> (MetaToken, userId) |> DraftToken |> Some | None -> None
         let chatToken = if permissions.ChatPermission then MetaToken |> ChatToken |> Some else None
         UserTokens {

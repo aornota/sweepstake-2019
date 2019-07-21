@@ -1,24 +1,23 @@
-module Aornota.Sweepstake2018.Server.Agents.Entities.Users
+module Aornota.Sweepstake2019.Server.Agents.Entities.Users
 
 (* Broadcasts: TODO:SendMsg
                UsersRead
    Subscribes: UsersEventsRead *)
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
 
-open Aornota.Server.Common.Helpers
-
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Events.UserEvents
-open Aornota.Sweepstake2018.Server.Jwt
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.Helpers
+open Aornota.Sweepstake2019.Server.Events.UserEvents
+open Aornota.Sweepstake2019.Server.Jwt
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -166,7 +165,7 @@ type Users () =
                     users
                     |> List.ofSeq
                     |> List.map (fun (KeyValue (userId, user)) -> { UserId = userId ; Rvn = user.Rvn ; UserName = user.UserName ; UserType = user.UserType })
-                usersRead |> UsersRead |> broadcaster.Broadcast       
+                usersRead |> UsersRead |> broadcaster.Broadcast
                 return! managingUsers users
             | HandleSignInCmd _ -> "HandleSignInCmd when pendingOnUsersEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnUsersEventsRead ()
             | HandleAutoSignInCmd _ -> "HandleAutoSignInCmd when pendingOnUsersEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnUsersEventsRead ()

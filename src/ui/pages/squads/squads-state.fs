@@ -1,20 +1,18 @@
-module Aornota.Sweepstake2018.UI.Pages.Squads.State
+module Aornota.Sweepstake2019.Ui.Pages.Squads.State
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.Squads.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.Squads.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 
@@ -200,7 +198,7 @@ let private handleAddPlayersInput addPlayersInput (squadDic:SquadDic) state : St
         let addPlayersState = { addPlayersState with NewPlayerType = newPlayerType }
         { state with AddPlayersState = addPlayersState |> Some }, Cmd.none, true
     | AddPlayer, Some addPlayersState -> // note: assume no need to validate NewPlayerNameText (i.e. because Squads.Render.renderAddPlayersModal will ensure that AddPlayer can only be dispatched when valid)
-        let addPlayersState = { addPlayersState with AddPlayerStatus = AddPlayerPending |> Some }   
+        let addPlayersState = { addPlayersState with AddPlayerStatus = AddPlayerPending |> Some }
         let squadId, resultRvn = addPlayersState.SquadId, addPlayersState.ResultRvn
         let currentRvn =
             match squadId |> squadRvn squadDic with
@@ -228,7 +226,7 @@ let private handleChangePlayerNameInput changePlayerNameInput (squadDic:SquadDic
         let changePlayerNameState = { changePlayerNameState with PlayerNameText = playerNameText ; PlayerNameErrorText = playerNameErrorText }
         { state with ChangePlayerNameState = changePlayerNameState |> Some }, Cmd.none, true
     | ChangePlayerName, Some changePlayerNameState -> // note: assume no need to validate PlayerNameText (i.e. because Squads.Render.renderChangePlayerNameModal will ensure that ChangePlayerName can only be dispatched when valid)
-        let changePlayerNameState = { changePlayerNameState with ChangePlayerNameStatus = ChangePlayerNamePending |> Some }   
+        let changePlayerNameState = { changePlayerNameState with ChangePlayerNameStatus = ChangePlayerNamePending |> Some }
         let squadId = changePlayerNameState.SquadId
         let currentRvn = match squadId |> squadRvn squadDic with | Some squadRvn -> squadRvn | None -> initialRvn
         let changePlayerNameCmdParams = squadId, currentRvn, changePlayerNameState.PlayerId, PlayerName (changePlayerNameState.PlayerNameText.Trim ())
@@ -251,7 +249,7 @@ let private handleChangePlayerTypeInput changePlayerTypeInput (squadDic:SquadDic
     | ChangePlayerType, Some changePlayerTypeState -> // note: assume no need to validate PlayerType (i.e. because Squads.Render.renderChangePlayerTypeModal will ensure that ChangePlayerType can only be dispatched when valid)
         match changePlayerTypeState.PlayerType with
         | Some playerType ->
-            let changePlayerTypeState = { changePlayerTypeState with ChangePlayerTypeStatus = ChangePlayerTypePending |> Some }   
+            let changePlayerTypeState = { changePlayerTypeState with ChangePlayerTypeStatus = ChangePlayerTypePending |> Some }
             let squadId = changePlayerTypeState.SquadId
             let currentRvn = match squadId |> squadRvn squadDic with | Some squadRvn -> squadRvn | None -> initialRvn
             let changePlayerTypeCmdParams = squadId, currentRvn, changePlayerTypeState.PlayerId, playerType
@@ -271,7 +269,7 @@ let private handleChangePlayerTypeInput changePlayerTypeInput (squadDic:SquadDic
 let private handleWithdrawPlayerInput withdrawPlayer (squadDic:SquadDic) state : State * Cmd<Input> * bool =
     match withdrawPlayer, state.WithdrawPlayerState with
     | ConfirmWithdrawPlayer, Some withdrawPlayerState ->
-        let withdrawPlayerState = { withdrawPlayerState with WithdrawPlayerStatus = WithdrawPlayerPending |> Some }   
+        let withdrawPlayerState = { withdrawPlayerState with WithdrawPlayerStatus = WithdrawPlayerPending |> Some }
         let squadId = withdrawPlayerState.SquadId
         let currentRvn = match squadId |> squadRvn squadDic with | Some squadRvn -> squadRvn | None -> initialRvn
         let cmd = (squadId, currentRvn, withdrawPlayerState.PlayerId) |> WithdrawPlayerCmd |> UiAuthSquadsMsg |> SendUiAuthMsg |> Cmd.ofMsg
@@ -288,7 +286,7 @@ let private handleWithdrawPlayerInput withdrawPlayer (squadDic:SquadDic) state :
 let private handleEliminateSquadInput eliminateSquadInput (squadDic:SquadDic) state : State * Cmd<Input> * bool =
     match eliminateSquadInput, state.EliminateSquadState with
     | ConfirmEliminateSquad, Some eliminateSquadState ->
-        let eliminateSquadState = { eliminateSquadState with EliminateSquadStatus = EliminateSquadPending |> Some }   
+        let eliminateSquadState = { eliminateSquadState with EliminateSquadStatus = EliminateSquadPending |> Some }
         let squadId = eliminateSquadState.SquadId
         let currentRvn = match squadId |> squadRvn squadDic with | Some squadRvn -> squadRvn | None -> initialRvn
         let cmd = (squadId, currentRvn) |> EliminateSquadCmd |> UiAuthSquadsMsg |> SendUiAuthMsg |> Cmd.ofMsg
@@ -305,7 +303,7 @@ let private handleEliminateSquadInput eliminateSquadInput (squadDic:SquadDic) st
 let private handleFreePickInput freePickInput (draftDic:DraftDic) state : State * Cmd<Input> * bool =
     match freePickInput, state.FreePickState with
     | ConfirmFreePick, Some freePickState ->
-        let freePickState = { freePickState with FreePickStatus = FreePickPending |> Some }   
+        let freePickState = { freePickState with FreePickStatus = FreePickPending |> Some }
         let draftId, draftPick = freePickState.DraftId, freePickState.DraftPick
         let currentRvn = if draftId |> draftDic.ContainsKey then draftDic.[draftId].Rvn else initialRvn
         let cmd = (draftId, currentRvn, draftPick) |> FreePickCmd |> UiAuthSquadsMsg |> SendUiAuthMsg |> Cmd.ofMsg

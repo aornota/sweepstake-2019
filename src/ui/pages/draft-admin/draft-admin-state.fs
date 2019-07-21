@@ -1,20 +1,18 @@
-module Aornota.Sweepstake2018.UI.Pages.DraftAdmin.State
+module Aornota.Sweepstake2019.Ui.Pages.DraftAdmin.State
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.DraftAdmin.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.DraftAdmin.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open Elmish
 
@@ -90,7 +88,7 @@ let private handleServerDraftAdminMsg serverDraftAdminMsg authUser state : State
 let private handleProcessDraftInput processDraftInput (draftDic:DraftDic) state : State * Cmd<Input> * bool =
     match processDraftInput, state.ProcessDraftState with
     | ConfirmProcessDraft, Some processDraftState ->
-        let processDraftState = { processDraftState with ProcessDraftStatus = ProcessDraftPending |> Some }   
+        let processDraftState = { processDraftState with ProcessDraftStatus = ProcessDraftPending |> Some }
         let draftId = processDraftState.DraftId
         let currentRvn = if draftId |> draftDic.ContainsKey then draftDic.[draftId].Rvn else initialRvn
         let cmd = (draftId, currentRvn) |> ProcessDraftCmd |> UiAuthDraftAdminMsg |> SendUiAuthMsg |> Cmd.ofMsg

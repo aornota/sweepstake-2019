@@ -1,27 +1,27 @@
-module Aornota.Sweepstake2018.Server.Agents.Projections.Chat
+module Aornota.Sweepstake2019.Server.Agents.Projections.Chat
 
 (* Broadcasts: SendMsg
    Subscribes: Tick
                ConnectionsSignedOut | Disconnected *)
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-open Aornota.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
 
-open Aornota.Server.Common.DeltaHelper
+open Aornota.Sweepstake2019.Server.Common.DeltaHelper
 
-open Aornota.Sweepstake2018.Common.Domain.Chat
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Ticker
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Chat
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Ticker
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -36,7 +36,7 @@ type private ChatInput =
         * reply : AsyncReplyChannel<Result<Rvn * ChatMessageDto list * bool, AuthQryError<string>>>
     | HandleSendChatMessageCmd of token : ChatToken * userId : UserId * chatMessageId : ChatMessageId * messageText : Markdown
         * reply : AsyncReplyChannel<Result<unit, AuthCmdError<string>>>
-    
+
 type private ChatMessage = { Ordinal : int ; UserId : UserId ; MessageText : Markdown ; Timestamp : DateTimeOffset }
 type private ChatMessageDic = Dictionary<ChatMessageId, ChatMessage>
 
@@ -170,7 +170,7 @@ type Chat () =
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnections"
                 sprintf "%s (%A) when projectingChat (%i chat message/s) (%i projectee/s)" source connectionIds chatMessageDic.Count projecteeDic.Count |> Info |> log
-                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds                
+                connectionIds |> List.iter (fun connectionId -> if connectionId |> projecteeDic.ContainsKey then connectionId |> projecteeDic.Remove |> ignore) // note: silently ignore unknown connectionIds
                 sprintf "%s when projectingChat -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 return! projectingChat state chatMessageDic projecteeDic
             | HandleInitializeChatProjectionQry (_, connectionId, reply) ->
@@ -197,7 +197,7 @@ type Chat () =
                 if connectionId |> projecteeDic.ContainsKey |> not then (connectionId, projectee) |> projecteeDic.Add else projecteeDic.[connectionId] <- projectee
                 sprintf "%s when projectingChat -> %i projectee/s)" source projecteeDic.Count |> Info |> log
                 let result = (initializedState |> chatMessageDtos, hasMoreChatMessages) |> Ok
-                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingChat state chatMessageDic projecteeDic
             | HandleMoreChatMessagesQry (_, connectionId, reply) ->
@@ -214,8 +214,8 @@ type Chat () =
                             |> List.filter (fun (_, chatMessage) ->
                                 match projectee.MinChatMessageOrdinal with
                                 | Some minChatMessageOrdinal -> minChatMessageOrdinal > chatMessage.Ordinal
-                                | None -> true) // note: should never happen                                   
-                            |> List.sortBy (fun (_, chatMessage) -> chatMessage.Ordinal) |> List.rev                       
+                                | None -> true) // note: should never happen
+                            |> List.sortBy (fun (_, chatMessage) -> chatMessage.Ordinal) |> List.rev
                         let moreChatMessages, hasMoreChatMessages =
                             if moreChatMessages.Length <= CHAT_MESSAGE_BATCH_SIZE then moreChatMessages, false
                             else moreChatMessages |> List.take CHAT_MESSAGE_BATCH_SIZE, true
@@ -226,11 +226,11 @@ type Chat () =
                         let projectee = { projectee with LastRvn = incrementRvn projectee.LastRvn ; MinChatMessageOrdinal = minChatMessageOrdinal ; LastHasMoreChatMessages = hasMoreChatMessages }
                         projecteeDic.[connectionId] <- projectee
                         (projectee.LastRvn, chatMessageDtos, hasMoreChatMessages) |> Ok
-                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 return! projectingChat state chatMessageDic projecteeDic
             | HandleSendChatMessageCmd (_, userId, chatMessageId, messageText, reply) ->
-                let source = "HandleSendChatMessageCmd" 
+                let source = "HandleSendChatMessageCmd"
                 sprintf "%s (%A %A) when projectingChat (%i chat message/s) (%i projectee/s)" source userId chatMessageId chatMessageDic.Count projecteeDic.Count |> Info |> log
                 let result =
                     if chatMessageId |> chatMessageDic.ContainsKey then ifDebug (sprintf "%A already exists" chatMessageId) UNEXPECTED_ERROR |> OtherError |> OtherAuthCmdError |> Error
@@ -242,7 +242,7 @@ type Chat () =
                                 if chatMessageDic.Count = 0 then 1
                                 else (chatMessageDic |> List.ofSeq |> List.map (fun (KeyValue (_, chatMessage)) -> chatMessage.Ordinal) |> List.max) + 1
                             (chatMessageId, { Ordinal = nextOrdinal ; UserId = userId ; MessageText = messageText ; Timestamp = DateTimeOffset.UtcNow }) |> chatMessageDic.Add |> Ok
-                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)                   
+                result |> logResult source (sprintf "%A" >> Some) // note: log success/failure here (rather than assuming that calling code will do so)
                 result |> reply.Reply
                 let state = (chatMessageDic, state) |> ChatMessageChange |> updateState source projecteeDic
                 return! projectingChat state chatMessageDic projecteeDic }

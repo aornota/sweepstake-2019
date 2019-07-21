@@ -1,14 +1,12 @@
-module Aornota.Sweepstake2018.UI.Pages.Squads.Common
+module Aornota.Sweepstake2019.Ui.Pages.Squads.Common
 
-open Aornota.Common.Revision
-
-open Aornota.UI.Common.Notifications
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.Notifications
 
 open System.Collections.Generic
 
@@ -66,7 +64,7 @@ type AddPlayerStatus =
     | AddPlayerFailed of errorText : string
 
 type AddPlayersState = {
-    SquadId : SquadId   
+    SquadId : SquadId
     NewPlayerId : PlayerId
     NewPlayerNameText : string
     NewPlayerNameErrorText : string option
@@ -79,7 +77,7 @@ type ChangePlayerNameStatus =
     | ChangePlayerNameFailed of errorText : string
 
 type ChangePlayerNameState = {
-    SquadId : SquadId   
+    SquadId : SquadId
     PlayerId : PlayerId
     PlayerNameText : string
     PlayerNameErrorText : string option
@@ -90,7 +88,7 @@ type ChangePlayerTypeStatus =
     | ChangePlayerTypeFailed of errorText : string
 
 type ChangePlayerTypeState = {
-    SquadId : SquadId   
+    SquadId : SquadId
     PlayerId : PlayerId
     PlayerType : PlayerType option
     ChangePlayerTypeStatus : ChangePlayerTypeStatus option }

@@ -1,7 +1,7 @@
-module Aornota.Sweepstake2018.Server.Events.UserDraftEvents
+module Aornota.Sweepstake2019.Server.Events.UserDraftEvents
 
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.User
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.User
 
 open System
 

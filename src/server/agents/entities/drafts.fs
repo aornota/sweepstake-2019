@@ -1,36 +1,34 @@
-module Aornota.Sweepstake2018.Server.Agents.Entities.Drafts
+module Aornota.Sweepstake2019.Server.Agents.Entities.Drafts
 
 (* Broadcasts: SendMsg
                DraftsRead
-               UserDraftsRead              
+               UserDraftsRead
    Subscribes: Tick
                SquadsRead
                SquadEventWritten (PlayerAdded | PlayerTypeChanged | PlayerWithdrawn)
                DraftsEventsRead
                UserDraftsEventsRead *)
 
-open Aornota.Common.IfDebug
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.Server.Common.Helpers
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Draft
-open Aornota.Sweepstake2018.Common.Domain.Squad
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Agents.Ticker
-open Aornota.Sweepstake2018.Server.Authorization
-open Aornota.Sweepstake2018.Server.Connection
-open Aornota.Sweepstake2018.Server.Events.DraftEvents
-open Aornota.Sweepstake2018.Server.Events.SquadEvents
-open Aornota.Sweepstake2018.Server.Events.UserDraftEvents
-open Aornota.Sweepstake2018.Server.Signal
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Draft
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Agents.Ticker
+open Aornota.Sweepstake2019.Server.Authorization
+open Aornota.Sweepstake2019.Server.Common.Helpers
+open Aornota.Sweepstake2019.Server.Connection
+open Aornota.Sweepstake2019.Server.Events.DraftEvents
+open Aornota.Sweepstake2019.Server.Events.SquadEvents
+open Aornota.Sweepstake2019.Server.Events.UserDraftEvents
+open Aornota.Sweepstake2019.Server.Signal
 
 open System
 open System.Collections.Generic
@@ -52,7 +50,7 @@ type private DraftsInput =
         * reply : AsyncReplyChannel<Result<unit, AuthCmdError<string>>>
     | HandleProcessDraftCmd of token : ProcessDraftToken * auditUserId : UserId * draftId : DraftId * currentRvn : Rvn * connectionId : ConnectionId
     | HandleChangePriorityCmd of token : DraftToken * auditUserId : UserId * draftId : DraftId * currentRvn : Rvn * userDraftPick : UserDraftPick
-        * priorityChange : PriorityChange * connectionId : ConnectionId        
+        * priorityChange : PriorityChange * connectionId : ConnectionId
     | HandleAddToDraftCmd of token : DraftToken * auditUserId : UserId * draftId : DraftId * currentRvn : Rvn * userDraftPick : UserDraftPick
         * connectionId : ConnectionId
     | HandleRemoveFromDraftCmd of token : DraftToken * auditUserId : UserId * draftId : DraftId * currentRvn : Rvn * userDraftPick : UserDraftPick
@@ -597,7 +595,7 @@ let private housekeeping source (draftDic:DraftDic) =
         match draft.DraftStatus with | PendingOpen _ | Opened _ | PendingProcessing _ -> draft |> Some | _ -> None)
     if unprocessed.Length = 0 then
         let noLongerPendingFreeSelection = draftDic |> List.ofSeq |> List.choose (fun (KeyValue (draftId, draft)) ->
-            match draft.DraftStatus with | PendingFreeSelection -> (draftId, draft) |> Some | _ -> None)               
+            match draft.DraftStatus with | PendingFreeSelection -> (draftId, draft) |> Some | _ -> None)
         noLongerPendingFreeSelection |> List.iter (fun (draftId, draft) ->
             let result =
                 draftId |> DraftFreeSelection |> tryApplyDraftEvent source draftId (draft |> Some) (incrementRvn draft.Rvn) ()
@@ -779,7 +777,7 @@ type Drafts () =
                 let! result =
                     match result with
                     | Ok (draft, rvn, draftEvent, _) -> tryWriteDraftEventAsync auditUserId rvn draftEvent draft ()
-                    | Error error -> error |> Error |> thingAsync               
+                    | Error error -> error |> Error |> thingAsync
                 result |> logResult source (fun (draftId, draft, _) -> Some (sprintf "Audit%A %A %A" auditUserId draftId draft)) // note: log success/failure here (rather than assuming that calling code will do so)
                 let serverMsg = result |> discardOk |> ProcessDraftCmdResult |> ServerDraftAdminMsg
                 (serverMsg, [ connectionId ]) |> SendMsg |> broadcaster.Broadcast
@@ -821,7 +819,7 @@ type Drafts () =
                 sprintf "%s for %A %A (%A %A) when managingDrafts (%i draft/s) (%i user draft/s) (%i squad/s)" source auditUserId draftId currentRvn userDraftPick draftDic.Count userDraftDic.Count squadDic.Count |> Verbose |> log
                 let result =
                     tryFindDraft draftId (otherCmdError source) draftDic
-                    |> Result.bind (fun (_, draft) -> match draft.DraftStatus with | Opened _ -> () |> Ok | _ -> ifDebug (sprintf "%A is not Opened" draftId) UNEXPECTED_ERROR |> otherCmdError source)                   
+                    |> Result.bind (fun (_, draft) -> match draft.DraftStatus with | Opened _ -> () |> Ok | _ -> ifDebug (sprintf "%A is not Opened" draftId) UNEXPECTED_ERROR |> otherCmdError source)
                 let! result =
                     match result with
                     | Ok _ ->
@@ -915,11 +913,11 @@ type Drafts () =
                         match draftPick with
                         | TeamPicked _ ->
                             if teamCount < MAX_TEAM_PICKS then ok else ifDebug "Team/coach is not required" UNEXPECTED_ERROR |> otherCmdError source
-                        | PlayerPicked (squadId, playerId) -> 
+                        | PlayerPicked (squadId, playerId) ->
                             match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with
                             | Some (Goalkeeper, _) ->
                                 if goalkeeperCount < MAX_GOALKEEPER_PICKS then ok else ifDebug "Goalkeeper is not required" UNEXPECTED_ERROR |> otherCmdError source
-                            | Some _ -> 
+                            | Some _ ->
                                 if outfieldPlayerCount < MAX_OUTFIELD_PLAYER_PICKS then ok else ifDebug "Outfield player is not required" UNEXPECTED_ERROR |> otherCmdError source
                             | None -> UNEXPECTED_ERROR |> otherCmdError source)
                     |> Result.bind (fun (draftId, draft) ->

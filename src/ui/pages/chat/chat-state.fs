@@ -1,23 +1,22 @@
-module Aornota.Sweepstake2018.UI.Pages.Chat.State
+module Aornota.Sweepstake2019.Ui.Pages.Chat.State
 
-open Aornota.Common.Delta
-open Aornota.Common.IfDebug
-open Aornota.Common.Json
-open Aornota.Common.Markdown
-open Aornota.Common.Revision
-open Aornota.Common.UnexpectedError
-
-open Aornota.UI.Common.LocalStorage
-open Aornota.UI.Common.Notifications
-open Aornota.UI.Common.ShouldNeverHappen
-open Aornota.UI.Common.Toasts
-
-open Aornota.Sweepstake2018.Common.Domain.Chat
-open Aornota.Sweepstake2018.Common.Domain.User
-open Aornota.Sweepstake2018.Common.WsApi.ServerMsg
-open Aornota.Sweepstake2018.Common.WsApi.UiMsg
-open Aornota.Sweepstake2018.UI.Pages.Chat.Common
-open Aornota.Sweepstake2018.UI.Shared
+open Aornota.Sweepstake2019.Common.Delta
+open Aornota.Sweepstake2019.Common.Domain.Chat
+open Aornota.Sweepstake2019.Common.Domain.User
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.Json
+open Aornota.Sweepstake2019.Common.Markdown
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnexpectedError
+open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
+open Aornota.Sweepstake2019.Common.WsApi.UiMsg
+open Aornota.Sweepstake2019.Ui.Common.JsonConverter
+open Aornota.Sweepstake2019.Ui.Common.LocalStorage
+open Aornota.Sweepstake2019.Ui.Common.Notifications
+open Aornota.Sweepstake2019.Ui.Common.ShouldNeverHappen
+open Aornota.Sweepstake2019.Ui.Common.Toasts
+open Aornota.Sweepstake2019.Ui.Pages.Chat.Common
+open Aornota.Sweepstake2019.Ui.Shared
 
 open System
 
@@ -25,18 +24,18 @@ open Elmish
 
 open Fable.Core.JsInterop
 
-let [<Literal>] private CHAT_PREFERENCES_KEY = "sweepstake-2018-ui-chat-preferences"
+let [<Literal>] private CHAT_PREFERENCES_KEY = "sweepstake-2019-ui-chat-preferences"
 
 let private readPreferencesCmd =
     let readPreferences () = async {
-        return Key CHAT_PREFERENCES_KEY |> readJson |> Option.map (fun (Json json) -> json |> ofJson<DateTimeOffset>) }
-    Cmd.ofAsync readPreferences () (Ok >> ReadPreferencesResult) (Error >> ReadPreferencesResult)
+        return Key CHAT_PREFERENCES_KEY |> readJson |> Option.map (fun (Json json) -> json |> fromJson<DateTimeOffset>) }
+    Cmd.OfAsync.either readPreferences () (Ok >> ReadPreferencesResult) (Error >> ReadPreferencesResult)
 
 let private writePreferencesCmd state =
     let writePreferences (lastChatSeen:DateTimeOffset) = async {
         do lastChatSeen |> toJson |> Json |> writeJson (Key CHAT_PREFERENCES_KEY) }
     match state.LastChatSeen with
-    | Some lastChatSeen -> Cmd.ofAsync writePreferences lastChatSeen (Ok >> WritePreferencesResult) (Error >> WritePreferencesResult)
+    | Some lastChatSeen -> Cmd.OfAsync.either writePreferences lastChatSeen (Ok >> WritePreferencesResult) (Error >> WritePreferencesResult)
     | None -> Cmd.none
 
 let initialize (authUser:AuthUser) isCurrentPage readPreferences lastChatSeen : State * Cmd<Input> =
@@ -141,7 +140,7 @@ let private handleServerChatMsg serverChatMsg state : State * Cmd<Input> =
                 let readyState = { readyState with NewChatMessageState = newChatMessageState }
                 { state with ChatProjection = (rvn, chatMessageDic, readyState) |> Ready }, "Unable to send chat message" |> errorToastCmd
         | Some (SendChatMessageFailed _) | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected SendChatMessageCmdResult when SendChatMessageStatus is not SendChatMessagePending -> %A" result)    
+            state, shouldNeverHappenCmd (sprintf "Unexpected SendChatMessageCmdResult when SendChatMessageStatus is not SendChatMessagePending -> %A" result)
     | ChatProjectionMsg (ChatMessagesDeltaMsg (deltaRvn, chatMessageDtoDelta, hasMoreChatMessages)), Ready (rvn, chatMessageDic, readyState) ->
         match chatMessageDic |> applyChatMessagesDelta rvn deltaRvn chatMessageDtoDelta with
         | Ok chatMessageDic ->

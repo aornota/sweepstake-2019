@@ -1,9 +1,9 @@
-module Aornota.UI.Theme.Common
+module Aornota.Sweepstake2019.Ui.Theme.Common
 
-open Aornota.UI.Render.Bulma
-open Aornota.UI.Render.Common
+open Aornota.Sweepstake2019.Ui.Render.Bulma
+open Aornota.Sweepstake2019.Ui.Render.Common
 
-open Fable.Import.React
+open Browser.Types
 
 type ThemeClass = | ThemeClass of themeClass : string
 
@@ -26,7 +26,7 @@ type ButtonInteraction =
     | Loading
     | Static
     | NotEnabled of tooltipData : TooltipData option
-    
+
 type ButtonData = {
     ButtonSemantic : Semantic option
     ButtonSize : Size
@@ -102,7 +102,7 @@ type TabsData = {
     // TODO-NMB-LOW?... IsToggleRounded : bool
     TabsAlignment : Alignment
     TabsSize : Size
-    Tabs : TabData list }    
+    Tabs : TabData list }
 
 type TagData = {
     TagSemantic : Semantic option

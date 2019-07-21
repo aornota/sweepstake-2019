@@ -1,10 +1,9 @@
-module Aornota.Sweepstake2018.Common.Domain.Fixture
+module Aornota.Sweepstake2019.Common.Domain.Fixture
 
-open Aornota.Common.Revision
-open Aornota.Common.UnitsOfMeasure
-
-open Aornota.Sweepstake2018.Common.Domain.Core
-open Aornota.Sweepstake2018.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Domain.Core
+open Aornota.Sweepstake2019.Common.Domain.Squad
+open Aornota.Sweepstake2019.Common.Revision
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
 
 open System
 

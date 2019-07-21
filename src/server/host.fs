@@ -1,17 +1,17 @@
-﻿module Aornota.Sweepstake2018.Server.Host
+﻿module Aornota.Sweepstake2019.Server.Host
 
-open Aornota.Common.IfDebug
-open Aornota.Common.UnitsOfMeasure
+open Aornota.Sweepstake2019.Common.IfDebug
+open Aornota.Sweepstake2019.Common.UnitsOfMeasure
 
-open Aornota.Sweepstake2018.Common.Literals
-open Aornota.Sweepstake2018.Server.Agents
-open Aornota.Sweepstake2018.Server.Agents.Broadcaster
-open Aornota.Sweepstake2018.Server.Agents.Connections
-open Aornota.Sweepstake2018.Server.Agents.ConsoleLogger
-open Aornota.Sweepstake2018.Server.Agents.Persistence
-open Aornota.Sweepstake2018.Server.Agents.Ticker
-open Aornota.Sweepstake2018.Server.DefaultData
-open Aornota.Sweepstake2018.Server.WsMiddleware
+open Aornota.Sweepstake2019.Common.Literals
+open Aornota.Sweepstake2019.Server.Agents
+open Aornota.Sweepstake2019.Server.Agents.Broadcaster
+open Aornota.Sweepstake2019.Server.Agents.Connections
+open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
+open Aornota.Sweepstake2019.Server.Agents.Persistence
+open Aornota.Sweepstake2019.Server.Agents.Ticker
+open Aornota.Sweepstake2019.Server.DefaultData
+open Aornota.Sweepstake2019.Server.WsMiddleware
 
 open System
 open System.IO

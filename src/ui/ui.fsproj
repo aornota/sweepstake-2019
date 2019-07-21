@@ -29,6 +29,7 @@
     <Compile Include="..\ui-theme\theme-dark.fs" />
     <Compile Include="..\ui-theme\theme-shared.fs" />
     <Compile Include="..\ui-theme\theme-render-bulma.fs" />
+    <Compile Include="..\ui-common\json-converter.fs" />
     <Compile Include="..\ui-common\local-storage.fs" />
     <Compile Include="..\ui-common\lazy-view-or-hmr.fs" />
     <Compile Include="..\ui-common\should-never-happen.fs" />
