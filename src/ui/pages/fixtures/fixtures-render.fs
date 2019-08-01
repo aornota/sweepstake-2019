@@ -25,15 +25,6 @@ let private possibleParticipants unconfirmed (fixtureDic:FixtureDic) (squadDic:S
     match unconfirmed with
     | StageWinner (Group group) | GroupRunnerUp group ->
         squadDic |> List.ofSeq |> List.choose (fun (KeyValue (squadId, squad)) -> if squad.Group = group then squadId |> Some else None)
-    | StageWinner (RoundOf16 matchNumber) ->
-        fixtureDic |> List.ofSeq |> List.map (fun (KeyValue (_, fixture)) ->
-            match fixture.Stage with
-            | RoundOf16 otherMatchNumber when otherMatchNumber = matchNumber ->
-                match fixture.HomeParticipant, fixture.AwayParticipant with
-                | Confirmed homeSquadId, Confirmed awaySquadId -> [ homeSquadId ; awaySquadId ]
-                | _ -> []
-            | _ -> [])
-            |> List.collect id
     | StageWinner (QuarterFinal quarterFinalOrdinal) ->
         fixtureDic |> List.ofSeq |> List.map (fun (KeyValue (_, fixture)) ->
             match fixture.Stage with
@@ -436,10 +427,9 @@ let private startsIn (_timestamp:DateTime) : Fable.React.ReactElement option * b
 let private stageText stage =
     match stage with
     | Group group -> group |> groupText
-    | RoundOf16 matchNumber -> sprintf "Round of 16 (match %i)" matchNumber
     | QuarterFinal quarterFinalOrdinal -> sprintf "Quarter-final %i" quarterFinalOrdinal
     | SemiFinal semiFinalOrdinal -> sprintf "Semi-final %i" semiFinalOrdinal
-    | ThirdPlacePlayOff -> "Bronze final"
+    | BronzeFinal -> "Bronze final"
     | Final -> "Final"
 
 let private confirmedFixtureDetails (squadDic:SquadDic) fixture =
@@ -619,9 +609,9 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
         match currentFixtureFilter with
         | AllFixtures -> true
         | GroupFixtures currentGroup ->
-            match fixture.Stage with | Group group -> group |> Some = currentGroup | RoundOf16 _ | QuarterFinal _ | SemiFinal _ | ThirdPlacePlayOff | Final -> false
+            match fixture.Stage with | Group group -> group |> Some = currentGroup | QuarterFinal _ | SemiFinal _ | BronzeFinal | Final -> false
         | KnockoutFixtures ->
-            match fixture.Stage with | RoundOf16 _ | QuarterFinal _ | SemiFinal _ | ThirdPlacePlayOff | Final -> true | Group _ -> false
+            match fixture.Stage with | QuarterFinal _ | SemiFinal _ | BronzeFinal | Final -> true | Group _ -> false
         | Fixture _ -> false
     let canConfirmParticipant, canAdministerResults =
         match authUser with
@@ -641,13 +631,6 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                             fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
                                 match fixture.Stage with
                                 | Group otherGroup when otherGroup = group -> match fixture.MatchResult with | Some _ -> false | None -> true
-                                | _ -> false)
-                        dependsOnPending.Length = 0
-                    | StageWinner (RoundOf16 matchNumber) ->
-                        let dependsOnPending =
-                            fixtureDic |> List.ofSeq |> List.filter (fun (KeyValue (_, fixture)) ->
-                                match fixture.Stage with
-                                | RoundOf16 otherMatchNumber when otherMatchNumber = matchNumber -> match fixture.MatchResult with | Some _ -> false | None -> true
                                 | _ -> false)
                         dependsOnPending.Length = 0
                     | StageWinner (QuarterFinal quarterFinalOrdinal) ->

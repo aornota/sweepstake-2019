@@ -11,13 +11,11 @@ type FixtureId = | FixtureId of guid : Guid with static member Create () = Guid.
 
 type Role = | Home | Away
 
-// TODO-NMB: Drop RoundOf16 | ThirdPlacePlayOff->BronzeFinal...
 type Stage =
     | Group of group : Group
-    | RoundOf16 of matchNumber : uint32
     | QuarterFinal of quarterFinalOrdinal : uint32
     | SemiFinal of semiFinalOrdinal : uint32
-    | ThirdPlacePlayOff
+    | BronzeFinal
     | Final
 
 type Unconfirmed =

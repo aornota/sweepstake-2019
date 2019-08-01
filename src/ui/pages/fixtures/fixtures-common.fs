@@ -110,10 +110,9 @@ type State = {
 let unconfirmedText unconfirmed =
     match unconfirmed with
     | StageWinner (Group group) -> sprintf "%s winner" (group |> groupText)
-    | StageWinner (RoundOf16 matchNumber) -> sprintf "Match %i winner" matchNumber
     | StageWinner (QuarterFinal quarterFinalOrdinal) -> sprintf "Quarter-final %i winner" quarterFinalOrdinal
     | StageWinner (SemiFinal semiFinalOrdinal) -> sprintf "Semi-final %i winner" semiFinalOrdinal
-    | StageWinner (ThirdPlacePlayOff) | StageWinner (Final) -> SHOULD_NEVER_HAPPEN
+    | StageWinner (BronzeFinal) | StageWinner (Final) -> SHOULD_NEVER_HAPPEN
     | GroupRunnerUp group -> sprintf "%s runner-up" (group |> groupText)
     | SemiFinalLoser semiFinalOrdinal -> sprintf "Semi-final %i loser" semiFinalOrdinal
 

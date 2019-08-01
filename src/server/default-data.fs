@@ -596,7 +596,7 @@ let private createInitialFixturesEventsIfNecessary = async {
         // #endregion
         // #region: "Bronze" final
         let loserSF1VsLoserSF2KO = (2019, 11, 01, 09, 00) |> dateTimeOffsetUtc
-        let! result = nephTokens.CreateFixtureToken |> ifToken (fun token -> (token, nephId, fixtureId 47u, ThirdPlacePlayOff, Unconfirmed (SemiFinalLoser 1u), Unconfirmed (SemiFinalLoser 2u), loserSF1VsLoserSF2KO) |> fixtures.HandleCreateFixtureCmdAsync)
+        let! result = nephTokens.CreateFixtureToken |> ifToken (fun token -> (token, nephId, fixtureId 47u, BronzeFinal, Unconfirmed (SemiFinalLoser 1u), Unconfirmed (SemiFinalLoser 2u), loserSF1VsLoserSF2KO) |> fixtures.HandleCreateFixtureCmdAsync)
         result |> logShouldSucceed (sprintf "HandleCreateFixtureCmdAsync (match %i)" 47u)
         // #endregion
         // #region: Final
