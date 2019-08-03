@@ -71,6 +71,7 @@ let private headerPages (appState:AppState) =
 let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:DateTimeOffset option, headerStatus, headerPages, _:int<tick>) dispatch =
     let isAdminPage page = match page with | AuthPage UserAdminPage | AuthPage DraftAdminPage -> true | _ -> false
     let theme = getTheme useDefaultTheme
+    // #region serverStarted
     let serverStarted =
         match headerStatus, serverStarted with
         | SignedIn authUser, Some serverStarted when authUser.UserType = SuperUser ->
@@ -82,6 +83,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
 #endif
             navbarItem [ [ str (sprintf "Server started %s" timestampText ) ] |> para theme { paraDefaultSmallest with ParaColour = GreyscalePara GreyDark } ] |> Some
         | _, _ -> None
+    // #endregion
     let statusInfo =
         let paraStatus = { paraDefaultSmallest with ParaColour = GreyscalePara GreyDarker }
         let spinner = icon iconSpinnerPulseSmall
@@ -94,17 +96,17 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
         | SigningOut -> [ separator ; [ str "Signing out... " ; spinner ] |> para theme paraStatus ]
         | NotSignedIn ->
             [
-                separator ; [ str "Not signed-in" ] |> para theme paraStatus
-                [ [ str "Sign in" ] |> link theme (ClickableLink (fun _ -> ShowSignInModal |> UnauthInput |> AppInput |> dispatch)) ] |> para theme paraDefaultSmallest
+                separator ; [ str "Not signed in" ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Primary }
+                [ [ str "Sign in" ] |> link theme (Internal (fun _ -> ShowSignInModal |> UnauthInput |> AppInput |> dispatch)) ] |> para theme paraDefaultSmallest
             ]
         | SignedIn authUser ->
             let (UserName userName) = authUser.UserName
-            [ separator ; [ str "Signed-in as " ; bold userName ] |> para theme paraStatus ]
+            [ separator ; [ str "Signed in as " ; strong userName ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Success } ]
     let authUserDropDown =
         match headerStatus with
         | SignedIn authUser ->
-            let changePassword = [ str "Change password" ] |> link theme (ClickableLink (fun _ -> ShowChangePasswordModal |> AuthInput |> AppInput |> dispatch))
-            let signOut = [ str "Sign out" ] |> link theme (ClickableLink (fun _ -> SignOut |> AuthInput |> AppInput |> dispatch))
+            let changePassword = [ str "Change password" ] |> link theme (Internal (fun _ -> ShowChangePasswordModal |> AuthInput |> AppInput |> dispatch))
+            let signOut = [ str "Sign out" ] |> link theme (Internal (fun _ -> SignOut |> AuthInput |> AppInput |> dispatch))
             navbarDropDown theme (icon iconUserSmall) [
                 match authUser.Permissions.ChangePasswordPermission with
                 | Some userId when userId = authUser.UserId -> yield navbarDropDownItem theme false [ [ changePassword ] |> para theme paraDefaultSmallest ]
@@ -114,7 +116,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
     let pageTabs =
         headerPages
         |> List.filter (fun (_, _, page, _) -> isAdminPage page |> not)
-        |> List.map (fun (text, isActive, _, appInput) -> { IsActive = isActive ; TabText = text ; TabLinkType = ClickableLink (fun _ -> appInput |> AppInput |> dispatch) })
+        |> List.map (fun (text, isActive, _, appInput) -> { IsActive = isActive ; TabText = text ; TabLinkType = Internal (fun _ -> appInput |> AppInput |> dispatch) })
     let adminDropDown =
         match headerStatus with
         | SignedIn authUser ->
@@ -125,7 +127,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
                         match headerPages |> List.tryFind (fun (_, _, page, _) -> page = AuthPage UserAdminPage) with
                         | Some (text, isActive, _, appInput) -> text, isActive, appInput
                         | None -> "User administration", false, UserAdminPage |> AuthPage |> ShowPage |> AuthInput // note: should never happen
-                    let userAdmin = [ str text ] |> link theme (ClickableLink (fun _ -> appInput |> AppInput |> dispatch))
+                    let userAdmin = [ str text ] |> link theme (Internal (fun _ -> appInput |> AppInput |> dispatch))
                     navbarDropDownItem theme isActive [ [ userAdmin ] |> para theme paraDefaultSmallest ] |> Some
                 | None -> None
             let draftAdmin =
@@ -135,7 +137,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
                         match headerPages |> List.tryFind (fun (_, _, page, _) -> page = AuthPage DraftAdminPage) with
                         | Some (text, isActive, _, appInput) -> text, isActive, appInput
                         | None -> "Draft administration", false, DraftAdminPage |> AuthPage |> ShowPage |> AuthInput // note: should never happen
-                    let draftAdmin = [ str text ] |> link theme (ClickableLink (fun _ -> appInput |> AppInput |> dispatch))
+                    let draftAdmin = [ str text ] |> link theme (Internal (fun _ -> appInput |> AppInput |> dispatch))
                     navbarDropDownItem theme isActive [ [ draftAdmin ] |> para theme paraDefaultSmallest ] |> Some
                 | None -> None
             let hasDropDown = match userAdmin, draftAdmin with | None, None -> false | _ -> true
@@ -145,9 +147,9 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
     let infoDropDown =
         match headerStatus with
         | NotSignedIn | SignedIn _ ->
-            let scoringSystem = [ [ str "Scoring system" ] |> link theme (ClickableLink (fun _ -> ScoringSystem |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
-            let draftAlgorithm = [ [ str "Draft algorithm" ] |> link theme (ClickableLink (fun _ -> DraftAlgorithm |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
-            let payouts = [ [ str "Payouts" ] |> link theme (ClickableLink (fun _ -> Payouts |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
+            let scoringSystem = [ [ str "Scoring system" ] |> link theme (Internal (fun _ -> ScoringSystem |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
+            let draftAlgorithm = [ [ str "Draft algorithm" ] |> link theme (Internal (fun _ -> DraftAlgorithm |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
+            let payouts = [ [ str "Payouts" ] |> link theme (Internal (fun _ -> Payouts |> ShowStaticModal |> dispatch)) ] |> para theme paraDefaultSmallest
             navbarDropDown theme (icon iconInfoSmall) [
                 navbarDropDownItem theme false [ scoringSystem ]
                 navbarDropDownItem theme false [ draftAlgorithm ]
@@ -156,7 +158,7 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
     let toggleThemeTooltipText = match useDefaultTheme with | true -> "Switch to dark theme" | false -> "Switch to light theme"
     let toggleThemeTooltipData = if navbarBurgerIsActive then tooltipDefaultRight else tooltipDefaultLeft
     let toggleThemeInteraction = Clickable ((fun _ -> ToggleTheme |> dispatch), { toggleThemeTooltipData with TooltipText = toggleThemeTooltipText } |> Some)
-    let toggleThemeButton = { buttonDarkSmall with IsOutlined = true ; Interaction = toggleThemeInteraction ; IconLeft = iconTheme |> Some }
+    let toggleThemeButton = { buttonDarkSmall with Interaction = toggleThemeInteraction ; IconLeft = iconTheme |> Some }
     let navbarData = { navbarDefault with NavbarSemantic = Light |> Some }
     navbar theme navbarData [
         container (Fluid |> Some) [
@@ -181,21 +183,26 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
 
 let private renderStaticModal (useDefaultTheme, titleText, markdown) dispatch =
     let theme = getTheme useDefaultTheme
-    cardModal theme [ [ bold titleText ] |> para theme paraCentredSmall ] ((fun _ -> HideStaticModal |> dispatch) |> Some) [ markdown |> contentFromMarkdown theme ]
+    let title = [ [ strong titleText ] |> para theme paraCentredSmall ]
+    let onDismiss = (fun _ -> HideStaticModal |> dispatch) |> Some
+    cardModal theme (Some(title, onDismiss)) [ markdown |> contentFromMarkdown theme ]
 
 let private markdownSyntaxKey = Guid.NewGuid ()
 
 let private renderMarkdownSyntaxModal useDefaultTheme dispatch =
     let theme = getTheme useDefaultTheme
+    let title = [ [ strong "Markdown syntax" ] |> para theme paraCentredSmall ]
+    let onDismiss = (fun _ -> HideStaticModal |> dispatch) |> Some
     let body = [
         [ str "As a very quick introduction to Markdown syntax, the following:" ] |> para theme paraCentredSmaller ; br
         textArea theme markdownSyntaxKey MARKDOWN_SYNTAX_MARKDOWN None [] false true ignore
         br ; [ str "will appear as:" ] |> para theme paraCentredSmaller ; br
         Markdown MARKDOWN_SYNTAX_MARKDOWN |> contentFromMarkdown theme ]
-    cardModal theme [ [ bold "Markdown syntax" ] |> para theme paraCentredSmall ] ((fun _ -> HideStaticModal |> dispatch) |> Some) body
+    cardModal theme (Some(title, onDismiss)) body
 
 let private renderSignInModal (useDefaultTheme, signInState) dispatch =
     let theme = getTheme useDefaultTheme
+    let title = [ [ strong "Sign in" ] |> para theme paraCentredSmall ]
     let isSigningIn, signInInteraction, onEnter, onDismiss =
         let signIn, onDismiss = (fun _ -> SignIn |> dispatch), (fun _ -> CancelSignIn |> dispatch)
         match signInState.SignInStatus with
@@ -221,7 +228,7 @@ let private renderSignInModal (useDefaultTheme, signInState) dispatch =
             textBox theme signInState.PasswordKey signInState.PasswordText (iconPasswordSmall |> Some) true signInState.PasswordErrorText [] signInState.FocusPassword isSigningIn
                 (PasswordTextChanged >> dispatch) onEnter ]
         yield field theme { fieldDefault with Grouped = Centred |> Some } [ [ str "Sign in" ] |> button theme { buttonLinkSmall with Interaction = signInInteraction } ] ]
-    cardModal theme [ [ bold "Sign in" ] |> para theme paraCentredSmall ] onDismiss body
+    cardModal theme (Some(title, onDismiss)) body
 
 let private renderUnauth (useDefaultTheme, unauthState, hasStaticModal, ticks) (dispatch:UnauthInput -> unit) =
     let hasModal = if hasStaticModal then true else match unauthState.SignInState with | Some _ -> true | None -> false
@@ -251,6 +258,7 @@ let private renderUnauth (useDefaultTheme, unauthState, hasStaticModal, ticks) (
 
 let private renderChangePasswordModal (useDefaultTheme, changePasswordState) dispatch =
     let theme = getTheme useDefaultTheme
+    let title = [ [ strong "Change password" ] |> para theme paraCentredSmall ]
     let onDismiss = match changePasswordState.ChangePasswordStatus with | Some ChangePasswordPending -> None | Some _ | None -> (fun _ -> CancelChangePassword |> dispatch) |> Some
     let isChangingPassword, changePasswordInteraction, onEnter =
         let changePassword = (fun _ -> ChangePassword |> dispatch)
@@ -289,11 +297,12 @@ let private renderChangePasswordModal (useDefaultTheme, changePasswordState) dis
              textBox theme changePasswordState.ConfirmPasswordKey changePasswordState.ConfirmPasswordText (iconPasswordSmall |> Some) true changePasswordState.ConfirmPasswordErrorText []
                 false isChangingPassword (ConfirmPasswordTextChanged >> dispatch) onEnter ]
         yield field theme { fieldDefault with Grouped = Centred |> Some } [ [ str "Change password" ] |> button theme { buttonLinkSmall with Interaction = changePasswordInteraction } ]        ]
-    cardModal theme [ [ bold "Change password" ] |> para theme paraCentredSmall ] onDismiss body
+    cardModal theme (Some(title, onDismiss)) body
 
 let private renderSigningOutModal useDefaultTheme =
     let theme = getTheme useDefaultTheme
-    cardModal theme [ [ bold "Signing out" ] |> para theme paraCentredSmall ] None [ div divCentred [ icon iconSpinnerPulseLarge ] ]
+    let title = [ [ strong "Signing out" ] |> para theme paraCentredSmall ]
+    cardModal theme (Some(title, None)) [ div divCentred [ icon iconSpinnerPulseLarge ] ]
 
 let private userDraftPickSummary theme (squadDic:SquadDic) (userDraftPickDtos:UserDraftPickDto list) =
     let isTeamPick userDraftPick = match userDraftPick with | TeamPick _ -> true | PlayerPick _ -> false
@@ -332,7 +341,7 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
         let pickedCounts = (squad, players) |> pickedCounts
         let stillRequired =
             match pickedCounts |> stillRequired with
-            | Some stillRequired -> [ bold (sprintf "%s." stillRequired) ] |> para theme paraDefaultSmallest |> Some
+            | Some stillRequired -> [ strong (sprintf "%s." stillRequired) ] |> para theme paraDefaultSmallest |> Some
             | None -> None
         let semanticAndContents =
             let draftTextLower = draft.DraftOrdinal |> draftTextLower
@@ -341,7 +350,7 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                 br
                 [
                     str "You can see your successful picks from previous drafts on the "
-                    [ str "Scores" ] |> link theme (ClickableLink (fun _ -> ScoresPage |> UnauthPage |> ShowPage |> dispatch))
+                    [ str "Scores" ] |> link theme (Internal (fun _ -> ScoresPage |> UnauthPage |> ShowPage |> dispatch))
                     str " page."
                 ] |> para theme paraDefaultSmallest
             ]
@@ -350,7 +359,7 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                 let starts, ends = starts.LocalDateTime |> dateAndTimeText, ends.LocalDateTime |> dateAndTimeText
                 let contents =
                     [
-                        yield [ bold (sprintf "The %s will open on %s and will close on %s" draftTextLower starts ends) ] |> para theme paraCentredSmaller
+                        yield [ strong (sprintf "The %s will open on %s and will close on %s" draftTextLower starts ends) ] |> para theme paraCentredSmaller
                         if isFirst |> not then yield! scoresPageBlurb
                     ]
                 (Info, contents) |> Some
@@ -359,7 +368,7 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                 let semantic, userDraftPickSummary =
                     match stillRequired, currentUserDraftDto with
                     | None, _ ->
-                        Success, [ [ bold (sprintf "You do not need to make any selections for the %s." draftTextLower) ] |> para theme paraDefaultSmallest ]
+                        Success, [ [ strong (sprintf "You do not need to make any selections for the %s." draftTextLower) ] |> para theme paraDefaultSmallest ]
                     | Some stillRequired, Some currentUserDraftDto when currentUserDraftDto.UserDraftPickDtos.Length > 0 ->
                         let contents =
                             [
@@ -373,14 +382,14 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                             [
                                 stillRequired
                                 br
-                                [ bold (sprintf "You have not made any selections for the %s." draftTextLower) ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Danger }
+                                [ strong (sprintf "You have not made any selections for the %s." draftTextLower) ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Danger }
                             ]
                         Warning, contents
                 let recommendation =
                     if isFirst then
                         [
                             br
-                            [ italic "We recommend making at least 25-30 selections for the first draft." ] |> para theme { paraDefaultSmallest with Weight = SemiBold }
+                            [ em "We recommend making at least 25-30 selections for the first draft." ] |> para theme { paraDefaultSmallest with Weight = SemiBold }
                         ]
                     else []
                 let pleaseSelect =
@@ -388,14 +397,14 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                     | Some _ ->
                         [
                             str "Please select teams/coaches, goalkeepers and outfield players (as required) on the "
-                            [ str "Squads" ] |> link theme (ClickableLink (fun _ -> SquadsPage |> UnauthPage |> ShowPage |> dispatch))
+                            [ str "Squads" ] |> link theme (Internal (fun _ -> SquadsPage |> UnauthPage |> ShowPage |> dispatch))
                             str " page. You can prioritize your selections on the "
-                            [ str "Drafts" ] |> link theme (ClickableLink (fun _ -> DraftsPage |> AuthPage |> ShowPage |> dispatch))
+                            [ str "Drafts" ] |> link theme (Internal (fun _ -> DraftsPage |> AuthPage |> ShowPage |> dispatch))
                             str " page."
                         ] |> para theme paraDefaultSmallest |> Some
                     | None -> None
                 let contents = [
-                    yield [ bold (sprintf "The %s is now open and will close on %s" draftTextLower ends) ] |> para theme paraCentredSmaller
+                    yield [ strong (sprintf "The %s is now open and will close on %s" draftTextLower ends) ] |> para theme paraCentredSmaller
                     if isFirst |> not then yield! scoresPageBlurb
                     yield br
                     match pleaseSelect with
@@ -408,20 +417,20 @@ let private currentDraftSummary useDefaultTheme authUser (_, draft:Draft) (curre
                 (semantic, contents) |> Some
             | PendingProcessing processingStarted ->
                 let status = if processingStarted then "is currently being processed" else "will be processed soon"
-                let contents = [ [ bold (sprintf "The %s is now closed and %s" draftTextLower status) ] |> para theme paraCentredSmaller ]
+                let contents = [ [ strong (sprintf "The %s is now closed and %s" draftTextLower status) ] |> para theme paraCentredSmaller ]
                 (Info, contents) |> Some
             | FreeSelection ->
                 match stillRequired with
                 | Some stillRequired ->
                     let required = match pickedCounts |> required with | Some required -> required | None -> "whatever is still required" // note: should never happen
                     let contents = [
-                        [ bold "The draft phase is over and \"free pick\" mode has commenced" ] |> para theme paraCentredSmaller
+                        [ strong "The draft phase is over and \"free pick\" mode has commenced" ] |> para theme paraCentredSmaller
                         br
                         stillRequired
                         br
                         [ str (sprintf "Please pick %s on the Squads page." required) ] |> para theme paraDefaultSmallest
                         br
-                        [ italic "Note that you will only be credited with points scored by these \"free picks\" in forthcoming fixtures, not with points that they have already scored." ]
+                        [ em "Note that you will only be credited with points scored by these \"free picks\" in forthcoming fixtures, not with points that they have already scored." ]
                         |> para theme paraDefaultSmallest ]
                     (Warning, contents) |> Some
                 | None -> None
@@ -494,7 +503,7 @@ let private renderAuth (useDefaultTheme, authState, hasStaticModal, ticks) dispa
             yield lazyViewOrHMR2 Chat.Render.render (useDefaultTheme, chatState, usersProjection, hasModal, ticks) (ChatInput >> APageInput >> PageInput >> dispatch) ]
 
 let private renderContent state dispatch =
-    let renderSpinner () = div divCentred [ icon iconSpinnerPulseLarge ]
+    let renderSpinner () = div divDefault [ divVerticalSpace 10 ; div divCentred [ icon iconSpinnerPulseMedium ] ]
     let renderServiceUnavailable useDefaultTheme =
         let theme = getTheme useDefaultTheme
         columnContent [ [ str "Service unavailable" ] |> para theme paraCentredSmall ; hr theme false ; [ str "Please try again later" ] |> para theme paraCentredSmaller ]
@@ -517,16 +526,16 @@ let private renderFooter useDefaultTheme =
     footer theme true [
         container (Fluid |> Some) [
             [
-                [ str "Written" ] |> link theme (SameWindow "https://github.com/aornota/sweepstake-2019") ; str " in "
-                [ str "F#" ] |> link theme (SameWindow "http://fsharp.org/") ; str " using "
-                [ str "Fable" ] |> link theme (SameWindow "http://fable.io/") ; str ", "
-                [ str "Elmish" ] |> link theme (SameWindow "https://elmish.github.io/") ; str ", "
-                [ str "Fulma" ] |> link theme (SameWindow "https://github.com/Fulma/Fulma/") ; str " / "
-                [ str "Bulma" ] |> link theme (SameWindow "https://bulma.io/") ; str " and "
-                [ str "Giraffe" ] |> link theme (SameWindow "https://github.com/giraffe-fsharp/Giraffe/") ; str ". Developed in "
-                [ str "Visual Studio Code" ] |> link theme (SameWindow "https://code.visualstudio.com/") ; str " using "
-                [ str "Ionide-fsharp" ] |> link theme (SameWindow "http://ionide.io/docs/") ; str ". Best viewed with "
-                [ str "Chrome" ] |> link theme (SameWindow "https://www.google.com/chrome/") ; str ". Not especially mobile-friendly." ] |> para theme paraCentredSmallest ] ]
+                [ str "Written" ] |> link theme (NewWindow "https://github.com/aornota/sweepstake-2019") ; str " in "
+                [ str "F#" ] |> link theme (NewWindow "http://fsharp.org/") ; str " using "
+                [ str "Fable" ] |> link theme (NewWindow "http://fable.io/") ; str ", "
+                [ str "Elmish" ] |> link theme (NewWindow "https://elmish.github.io/") ; str ", "
+                [ str "Fulma" ] |> link theme (NewWindow "https://github.com/Fulma/Fulma/") ; str " / "
+                [ str "Bulma" ] |> link theme (NewWindow "https://bulma.io/") ; str " and "
+                [ str "Giraffe" ] |> link theme (NewWindow "https://github.com/giraffe-fsharp/Giraffe/") ; str ". Developed in "
+                [ str "Visual Studio Code" ] |> link theme (NewWindow "https://code.visualstudio.com/") ; str " using "
+                [ str "Ionide-fsharp" ] |> link theme (NewWindow "http://ionide.io/docs/") ; str ". Best viewed with "
+                [ str "Chrome" ] |> link theme (NewWindow "https://www.google.com/chrome/") ; str ". Not especially mobile-friendly." ] |> para theme paraCentredSmallest ] ]
 
 let render state dispatch =
     div divDefault [

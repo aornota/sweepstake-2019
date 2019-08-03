@@ -14,6 +14,7 @@ type DivData = {
     PadH : int option }
 
 let [<Literal>] private KEYBOARD_CODE__ENTER = 13.
+let [<Literal>] private KEYBOARD_CODE__ESCAPE = 27.
 
 let [<Literal>] CENTRED_CLASS = "centered" (* sic *)
 let [<Literal>] SPACE = " "
@@ -28,11 +29,9 @@ let private padStyle padV padH =
     Style [ Padding padding ]
 
 let str text = str text
-
-let bold text = b [] [ str text ]
-
-let italic text = i [] [ str text ]
-
+let strongEm text = strong [] [ em [] [ str text ] ]
+let strong text = strong [] [ str text ]
+let em text = em [] [ str text ]
 let br = br []
 
 let div divData children =
@@ -59,4 +58,10 @@ let onEnterPressed onEnter =
             ev.preventDefault ()
             onEnter ()
         | _ -> ())
-
+let onEscapePressed onEscape =
+    OnKeyDown(fun (ev:KeyboardEvent) ->
+        match ev with
+        | _ when ev.keyCode = KEYBOARD_CODE__ESCAPE ->
+            ev.preventDefault()
+            onEscape()
+        | _ -> ())

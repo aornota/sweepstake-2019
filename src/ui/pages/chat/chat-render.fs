@@ -36,8 +36,8 @@ let private semanticAndSortOrder authUserId (userId, userAuthDto) =
         | Self -> Link, 0
         | RecentlyActive -> Success, 1
         | SignedIn -> Primary, 2
-        | NotSignedIn -> Dark, 3
-    | None -> Light, 5 // note: should never happen
+        | NotSignedIn -> Black, 3
+    | None -> White, 5 // note: should never happen
 
 // #region renderChatMessage
 let private renderChatMessage theme authUserId (userDic:UserDic) dispatch (chatMessageId, chatMessage) =
@@ -53,7 +53,7 @@ let private renderChatMessage theme authUserId (userDic:UserDic) dispatch (chatM
 #endif
             [ str timestampText ] |> para theme paraDefaultSmallest
         yield level true [
-            levelLeft [ levelItem [ [ bold userName ; str " says" ] |> para theme paraDefaultSmallest ] ]
+            levelLeft [ levelItem [ [ strong userName ; str " says" ] |> para theme paraDefaultSmallest ] ]
             levelRight [ levelItem [ rightItem ] ] ]
         yield messageText |> notificationContentFromMarkdown theme ]
     let userId, userAuthDto =
@@ -74,19 +74,19 @@ let private renderChatMessage theme authUserId (userDic:UserDic) dispatch (chatM
 let render (useDefaultTheme, state, usersProjection:Projection<_ * UserDic>, hasModal, _:int<tick>) dispatch =
     let theme = getTheme useDefaultTheme
     columnContent [
-        yield [ bold "Chat" ] |> para theme paraCentredSmall
+        yield [ strong "Chat" ] |> para theme paraCentredSmall
         yield hr theme false
         match usersProjection, state.ChatProjection with
         | Pending, _ | _, Pending ->
-            yield div divCentred [ icon iconSpinnerPulseLarge ]
+            yield div divDefault [ divVerticalSpace 10 ; div divCentred [ icon iconSpinnerPulseMedium ] ]
         | Failed, _ | _, Failed -> // note: should never happen
             yield [ str "This functionality is not currently available" ] |> para theme { paraCentredSmallest with ParaColour = SemanticPara Danger ; Weight = Bold }
         | Ready (_, userDic), Ready (_, chatMessageDic, readyState) ->
             let newChatMessageState = readyState.NewChatMessageState
             let (ChatMessageId newChatMessageKey), newMessageText = newChatMessageState.NewChatMessageId, newChatMessageState.NewMessageText
             let helpInfo = [
-                str "Chat messages are not persisted and will only be received by signed-in users. You can use "
-                [ str "Markdown syntax" ] |> link theme (ClickableLink (fun _ -> ShowMarkdownSyntaxModal |> dispatch))
+                str "Chat messages are not persisted and will only be received by signed in users. You can use "
+                [ str "Markdown syntax" ] |> link theme (Internal (fun _ -> ShowMarkdownSyntaxModal |> dispatch))
                 str " to format your message. A preview of your message will appear below." ; br; br ]
             let isSending, sendChatMessageInteraction =
                 match newChatMessageState.SendChatMessageStatus with
@@ -107,13 +107,13 @@ let render (useDefaultTheme, state, usersProjection:Projection<_ * UserDic>, has
                         (userName, semantic, sortOrder) |> Some
                     | Some _ | None -> None)
                 |> List.sortBy (fun (userName, _, sortOrder) -> sortOrder, userName)
-                |> List.map (fun (UserName userName, semantic, _) -> [ str userName ] |> tag theme { tagDefault with TagSemantic = semantic |> Some ; IsRounded = false })
+                |> List.map (fun (UserName userName, semantic, _) -> [ strong userName ] |> tag theme { tagDefault with TagSemantic = semantic |> Some ; IsRounded = false })
             let moreChatMessages =
                 let paraMore = { paraDefaultSmallest with ParaAlignment = RightAligned }
                 if readyState.MoreChatMessagesPending then
                     [ br ; [ str "Retrieving more chat messages... " ; icon iconSpinnerPulseSmall ] |> para theme paraMore ]
                 else if readyState.HasMoreChatMessages then
-                    [ br ; [ [ str "More chat messages" ] |> link theme (ClickableLink (fun _ -> MoreChatMessages |> dispatch)) ] |> para theme paraMore ]
+                    [ br ; [ [ str "More chat messages" ] |> link theme (Internal (fun _ -> MoreChatMessages |> dispatch)) ] |> para theme paraMore ]
                 else []
             match errorText with
             | Some errorText ->

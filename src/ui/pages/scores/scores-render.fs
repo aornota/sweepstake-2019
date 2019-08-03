@@ -50,10 +50,10 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                 match rankChange with
                 | Some rankChange ->
                     if rankChange > 0 then
-                        let contents = div divDefault [ icon iconCollapseUpSmall ; bold (sprintf " +%i" rankChange) ]
+                        let contents = div divDefault [ icon iconCollapseUpSmall ; strong (sprintf " +%i" rankChange) ]
                         [ contents ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Success } |> Some
                     else if rankChange < 0 then
-                        let contents = div divDefault [ icon iconExpandDownSmall ; italic (sprintf " %i" rankChange) ]
+                        let contents = div divDefault [ icon iconExpandDownSmall ; em (sprintf " %i" rankChange) ]
                         [ contents ] |> para theme { paraDefaultSmallest with ParaColour = SemanticPara Danger } |> Some
                     else None
                 | None -> None
@@ -78,20 +78,20 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                 |> List.filter (fun (squadId, _, _) -> if squadId |> squadDic.ContainsKey then squadDic.[squadId].Eliminated |> not else false)
                 |> List.length
             let pointsText = sprintf "%i" (int points)
-            let score = if points > 0<point> then bold pointsText else if points < 0<point> then italic pointsText else str pointsText
+            let score = if points > 0<point> then strong pointsText else if points < 0<point> then em pointsText else str pointsText
             let pointsChange =
                 match pointsChange with
                 | Some pointsChange ->
                     let paraPointsChange = { paraDefaultSmallest with ParaAlignment = RightAligned }
-                    if pointsChange > 0<point> then [ bold (sprintf "+%i" (int pointsChange)) ] |> para theme paraPointsChange |> Some
-                    else if pointsChange < 0<point> then [ italic (sprintf "%i" (int pointsChange)) ] |> para theme paraPointsChange |> Some
+                    if pointsChange > 0<point> then [ strong (sprintf "+%i" (int pointsChange)) ] |> para theme paraPointsChange |> Some
+                    else if pointsChange < 0<point> then [ em (sprintf "%i" (int pointsChange)) ] |> para theme paraPointsChange |> Some
                     else None
                 | None -> None
             tr false [
                 td [ RctH.ofOption payout ]
-                td [ [ italic rankText ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
+                td [ [ em rankText ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                 td [ RctH.ofOption rankChange ]
-                td [ [ [ str userName ] |> para theme paraDefaultSmallest ] |> link theme (ClickableLink onClick) ]
+                td [ [ [ str userName ] |> para theme paraDefaultSmallest ] |> link theme (Internal onClick) ]
                 td [ RctH.ofOption squad ]
                 td [ RctH.ofOption eliminated ]
                 td [ [ str formation ] |> para theme paraCentredSmallest ]
@@ -202,12 +202,12 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                     th []
                     th []
                     th []
-                    th [ [ bold "Name" ] |> para theme paraDefaultSmallest ]
-                    th [ [ bold "Team/coach"] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Name" ] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Team/coach"] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ [ bold "Formation" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Players remaining" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
-                    th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
+                    th [ [ strong "Formation" ] |> para theme paraCentredSmallest ]
+                    th [ [ strong "Players remaining" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
+                    th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                     th [] ] ]
             tbody [ yield! userRows ] ] ]
 
@@ -225,11 +225,11 @@ let private filterTabs currentScoresFilter dispatch =
         | Best _ -> (fun _ -> None |> ShowBest |> dispatch )
         | BestUnpicked _ -> (fun _ -> None |> ShowBestUnpicked |> dispatch )
     let filters = [ None |> Sweepstaker ; None |> Best ; None |> BestUnpicked ]
-    filters |> List.map (fun filter -> { IsActive = filter |> isActive ; TabText = filter |> filterText ; TabLinkType = ClickableLink (filter |> onClick) } )
+    filters |> List.map (fun filter -> { IsActive = filter |> isActive ; TabText = filter |> filterText ; TabLinkType = Internal (filter |> onClick) } )
 
 let private sweepstakerTabs users currentUserId dispatch =
     users |> List.map (fun (userId, UserName userName) ->
-        { IsActive = userId = currentUserId ; TabText = userName ; TabLinkType = ClickableLink (fun _ -> userId |> Some |> ShowSweepstaker |> dispatch) })
+        { IsActive = userId = currentUserId ; TabText = userName ; TabLinkType = Internal (fun _ -> userId |> Some |> ShowSweepstaker |> dispatch) })
 
 let private bestTabs currentBest dispatch =
     let bestText best =
@@ -241,7 +241,7 @@ let private bestTabs currentBest dispatch =
         | Midfielders -> "Midfielders"
         | Forwards -> "Forwards"
     let bests = [ Teams ; Players ; Goalkeepers ; Defenders ; Midfielders ; Forwards ]
-    bests |> List.map (fun best -> { IsActive = best = currentBest ; TabText = best |> bestText ; TabLinkType = ClickableLink (fun _ -> best |> Some |> dispatch) })
+    bests |> List.map (fun best -> { IsActive = best = currentBest ; TabText = best |> bestText ; TabLinkType = Internal (fun _ -> best |> Some |> dispatch) })
 
 // #region customAgo
 let private customAgo (timestamp:DateTime) =
@@ -259,19 +259,19 @@ let private pickedIn theme (draftOrdinal, timestamp:DateTimeOffset) =
 
 let private scoreText score =
     let scoreText = sprintf "%i" score
-    if score > 0 then bold scoreText else str scoreText
+    if score > 0 then strong scoreText else str scoreText
 
 let private score (points:int<point>) (pickedByPoints:int<point> option) pickedByUserId (userDic:UserDic) =
     let pointsOnly =
         let pointsText = sprintf "%i" (int points)
-        if points > 0<point> then bold pointsText else if points < 0<point> then italic pointsText else str pointsText
+        if points > 0<point> then strong pointsText else if points < 0<point> then em pointsText else str pointsText
     match pickedByPoints, pickedByUserId with
     | Some pickedByPoints, Some pickedByUserId ->
         if points = pickedByPoints then pointsOnly
         else
             let (UserName userName) = pickedByUserId |> userName userDic
             let pickedByPointsText = sprintf "%i" (int pickedByPoints)
-            let pickedByPoints = if pickedByPoints > 0<point> then bold pickedByPointsText else if pickedByPoints < 0<point> then italic pickedByPointsText else str pickedByPointsText
+            let pickedByPoints = if pickedByPoints > 0<point> then strong pickedByPointsText else if pickedByPoints < 0<point> then em pickedByPointsText else str pickedByPointsText
             let pickedByUser = str (sprintf " for %s)" userName)
             div divDefault [ pointsOnly ; str " (" ; pickedByPoints ; pickedByUser ]
     | _ -> pointsOnly
@@ -286,12 +286,12 @@ let private renderSweepstakerSquad (useDefaultTheme, userId, squadId, squad, dra
         yield table theme false { tableDefault with IsNarrow = true } [
             thead [
                 tr false [
-                    th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Team"] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ [ bold "Seeding" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Coach" ] |> para theme paraDefaultSmallest ]
-                    th [ [ bold "Picked in" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
+                    th [ [ strong "Seeding" ] |> para theme paraCentredSmallest ]
+                    th [ [ strong "Coach" ] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Picked in" ] |> para theme paraCentredSmallest ]
+                    th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
             tbody [
                 tr false [
                     td [ [ str squadName ] |> para theme paraDefaultSmallest ]
@@ -329,13 +329,13 @@ let private renderSweepstakerPlayers (useDefaultTheme, userId, players:(SquadId 
         yield table theme false { tableDefault with IsNarrow = true } [
             thead [
                 tr false [
-                    th [ [ bold "Player" ] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Player" ] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
+                    th [ [ strong "Team"] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ [ bold "Position" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Picked in" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
+                    th [ [ strong "Position" ] |> para theme paraCentredSmallest ]
+                    th [ [ strong "Picked in" ] |> para theme paraCentredSmallest ]
+                    th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
             tbody [ yield! playerRows ] ] ]
 
 let private pickedByTag theme (userDic:UserDic) (authUser:AuthUser option) (pickedBy:PickedBy option) =
@@ -344,8 +344,8 @@ let private pickedByTag theme (userDic:UserDic) (authUser:AuthUser option) (pick
         let (UserName userName) = userId |> userName userDic
         let pickedBy =
             match draftOrdinal with
-            | Some draftOrdinal -> [ div divDefault [ bold userName ; str (sprintf " (%s)" (draftOrdinal |> draftTextLower)) ] ]
-            | None -> [ div divDefault [ bold userName ; str (sprintf " (%s)" (customAgo timestamp.LocalDateTime)) ] ]
+            | Some draftOrdinal -> [ div divDefault [ strong userName ; str (sprintf " (%s)" (draftOrdinal |> draftTextLower)) ] ]
+            | None -> [ div divDefault [ strong userName ; str (sprintf " (%s)" (customAgo timestamp.LocalDateTime)) ] ]
         let tagData = match authUser with | Some authUser when authUser.UserId = userId -> tagSuccess | Some _ | None -> tagPrimary
         pickedBy |> tag theme { tagData with IsRounded = false } |> Some
     | None -> None
@@ -375,17 +375,22 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
             |> List.filter (fun (_, points, _, _) -> points > 0<point>)
             |> List.sortBy (fun (squad, points, _, _) -> -points, squad.SquadName)
         let squadRows = squads |> List.map squadRow
-        let pickedByHeader = if unpickedOnly |> not then [ bold "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
-        yield table theme false { tableDefault with IsNarrow = true} [
-            thead [
-                tr false [
-                    th [ [ bold "Team"] |> para theme paraDefaultSmallest ]
-                    th []
-                    th [ [ bold "Seeding" ] |> para theme paraCentredSmallest ]
-                    th [ [ bold "Coach" ] |> para theme paraDefaultSmallest ]
-                    th [ RctH.ofOption pickedByHeader ]
-                    th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
-            tbody [ yield! squadRows ] ] ]
+        let pickedByHeader = if unpickedOnly |> not then [ strong "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
+        match squadRows with
+        | _ :: _ ->
+            yield br
+            yield table theme false { tableDefault with IsNarrow = true} [
+                thead [
+                    tr false [
+                        th [ [ strong "Team"] |> para theme paraDefaultSmallest ]
+                        th []
+                        th [ [ strong "Seeding" ] |> para theme paraCentredSmallest ]
+                        th [ [ strong "Coach" ] |> para theme paraDefaultSmallest ]
+                        th [ RctH.ofOption pickedByHeader ]
+                        th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
+                tbody [ yield! squadRows ] ]
+        | [] -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
+    ]
 
 let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadDic:SquadDic, userDic:UserDic, fixtureDic:FixtureDic, authUser) =
     let theme = getTheme useDefaultTheme
@@ -424,19 +429,24 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
                 let active = match squad.Eliminated, player.PlayerStatus with | true, _ -> 1 | false, Withdrawn _ -> 1 | false, Active -> 0
                 -points, active, squad.SquadName, player.PlayerName)
         let playerRows = players |> List.map playerRow
-        let playerTypeHeader = match playerType with | Some _ -> None | None -> [ bold "Position" ] |> para theme paraCentredSmallest |> Some
-        let pickedByHeader = if unpickedOnly |> not then [ bold "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
-        yield table theme false { tableDefault with IsNarrow = true } [
-            thead [
-                tr false [
-                    th [ [ bold "Player" ] |> para theme paraDefaultSmallest ]
-                    th []
-                    th [ [ bold "Team" ] |> para theme paraDefaultSmallest ]
-                    th []
-                    th [ RctH.ofOption playerTypeHeader ]
-                    th [ RctH.ofOption pickedByHeader ]
-                    th [ [ bold "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
-            tbody [ yield! playerRows ] ] ]
+        let playerTypeHeader = match playerType with | Some _ -> None | None -> [ strong "Position" ] |> para theme paraCentredSmallest |> Some
+        let pickedByHeader = if unpickedOnly |> not then [ strong "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
+        match playerRows with
+        | _ :: _ ->
+            yield br
+            yield table theme false { tableDefault with IsNarrow = true } [
+                thead [
+                    tr false [
+                        th [ [ strong "Player" ] |> para theme paraDefaultSmallest ]
+                        th []
+                        th [ [ strong "Team" ] |> para theme paraDefaultSmallest ]
+                        th []
+                        th [ RctH.ofOption playerTypeHeader ]
+                        th [ RctH.ofOption pickedByHeader ]
+                        th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
+                tbody [ yield! playerRows ] ]
+        | [] -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
+    ]
 
 let private renderBest (useDefaultTheme, best, unpickedOnly, squadDic, userDic, fixtureDic, authUser) =
     match best with
@@ -450,11 +460,11 @@ let private renderBest (useDefaultTheme, best, unpickedOnly, squadDic, userDic, 
 let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Projection<_ * UserDic>, squadsProjection:Projection<_ * SquadDic>, fixturesProjection:Projection<_ * FixtureDic>) dispatch =
     let theme = getTheme useDefaultTheme
     columnContent [
-        yield [ bold "Scores" ] |> para theme paraCentredSmall
+        yield [ strong "Scores" ] |> para theme paraCentredSmall
         yield hr theme false
         match usersProjection, squadsProjection, fixturesProjection with
         | Pending, _, _ | _, Pending, _ | _, _, Pending ->
-            yield div divCentred [ icon iconSpinnerPulseLarge ]
+            yield div divDefault [ divVerticalSpace 10 ; div divCentred [ icon iconSpinnerPulseMedium ] ]
         | Failed, _, _ | _, Failed, _ | _, _, Failed -> // note: should never happen
             yield [ str "This functionality is not currently available" ] |> para theme { paraCentredSmallest with ParaColour = SemanticPara Danger ; Weight = Bold }
         | Ready (_, userDic), Ready (_, squadDic), Ready (_, fixtureDic) ->
@@ -488,7 +498,7 @@ let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Pr
                     yield br
                     match stillRequired with
                     | Some stillRequired ->
-                        yield [ bold stillRequired ] |> para theme paraCentredSmallest
+                        yield [ strong stillRequired ] |> para theme paraCentredSmallest
                         yield br
                     | None -> ()
                     match squad with
@@ -500,16 +510,14 @@ let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Pr
                     | _ :: _ ->
                         yield lazyViewOrHMR renderSweepstakerPlayers (useDefaultTheme, currentUserId, players, userDic, fixtureDic)
                     | [] -> ()
-                | None -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen*
+                | None -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
             | Best best ->
                 let best = match best with | Some best -> best | None -> Teams
                 let bestTabs = bestTabs best (ShowBest >> dispatch)
                 yield div divCentred [ tabs theme { tabsDefault with Tabs = bestTabs } ]
-                yield br
                 yield lazyViewOrHMR renderBest (useDefaultTheme, best, false, squadDic, userDic, fixtureDic, authUser)
             | BestUnpicked best ->
                 let best = match best with | Some best -> best | None -> Teams
                 let bestTabs = bestTabs best (ShowBestUnpicked >> dispatch)
                 yield div divCentred [ tabs theme { tabsDefault with Tabs = bestTabs } ]
-                yield br
                 yield lazyViewOrHMR renderBest (useDefaultTheme, best, true, squadDic, userDic, fixtureDic, authUser) ]

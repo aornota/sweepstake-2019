@@ -25,7 +25,7 @@
     <Compile Include="..\ui-render\render-common.fs" />
     <Compile Include="..\ui-render\render-bulma.fs" />
     <Compile Include="..\ui-theme\theme-common.fs" />
-    <Compile Include="..\ui-theme\theme-default.fs" />
+    <Compile Include="..\ui-theme\theme-light.fs" />
     <Compile Include="..\ui-theme\theme-dark.fs" />
     <Compile Include="..\ui-theme\theme-shared.fs" />
     <Compile Include="..\ui-theme\theme-render-bulma.fs" />

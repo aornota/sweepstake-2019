@@ -316,7 +316,7 @@ let private handleConnected ws (serverStarted:DateTimeOffset) otherConnectionCou
         let serverStarted = ago serverStarted.LocalDateTime
         let otherConnections = if otherConnectionCount > 0 then sprintf "<strong>%i</strong>" otherConnectionCount else sprintf "%i" otherConnectionCount
         let signedInUsers = if signedInUserCount > 0 then sprintf "<strong>%i</strong>" signedInUserCount else sprintf "%i" signedInUserCount
-        sprintf "Server started: %s<br>Other web socket connections: %s<br>Signed-in users: %s" serverStarted otherConnections signedInUsers |> infoToastCmd
+        sprintf "Server started: %s<br>Other web socket connections: %s<br>Signed in users: %s" serverStarted otherConnections signedInUsers |> infoToastCmd
 #else
         Cmd.none
 #endif

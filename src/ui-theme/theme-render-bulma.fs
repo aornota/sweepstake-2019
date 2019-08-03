@@ -91,16 +91,22 @@ let button theme buttonData children =
         yield! children
         match buttonData.IconRight with | Some iconDataRight -> yield icon { iconDataRight with IconAlignment = Some RightAligned } | None -> () ]
 
-let cardModal theme title onDismiss body =
+let cardModal theme head body =
     let (ThemeClass className) = theme.ThemeClass
     let (AlternativeClass alternativeClassName) = theme.AlternativeClass
-    Modal.modal [ Modal.IsActive true ] [
+    Modal.modal [
+        Modal.IsActive true
+        Modal.Props [ match head with | Some(_, Some onDismiss) -> yield onEscapePressed onDismiss | _ -> () ]
+    ] [
         Modal.background [] []
         Modal.Card.card [] [
-            Modal.Card.head [ CustomClass alternativeClassName ] [
-                yield Modal.Card.title [ CustomClass alternativeClassName ] title
-                match onDismiss with | Some onDismiss -> yield Delete.delete [ Delete.OnClick onDismiss ] [] | None -> () ]
-            Modal.Card.body [ CustomClass className ] body ] ]
+            match head with
+            | Some(title, onDismiss) ->
+                yield Modal.Card.head [ CustomClass alternativeClassName ] [
+                    yield Modal.Card.title [ CustomClass className ] title
+                    match onDismiss with | Some onDismiss -> yield Delete.delete [ Delete.OnClick(fun _ -> onDismiss ()) ] [] | None -> () ]
+            | None -> ()
+            yield Modal.Card.body [ CustomClass className ] body ] ]
 
 let field theme fieldData children =
     let tooltipData = match fieldData.TooltipData with | Some tooltipData -> Some (theme.TransformTooltipData tooltipData) | None -> None
@@ -135,21 +141,19 @@ let link theme linkType children =
     let (ThemeClass className) = theme.ThemeClass
     let customClasses = [
         yield className
-        match linkType with | ClickableLink _ -> yield "clickable" | _ -> () ]
+        match linkType with | Internal _ | DownloadFile _ -> yield "internal" | NewWindow _ -> yield "external" ]
     let customClass = match customClasses with | _ :: _ -> Some (String.concat SPACE customClasses) | [] -> None
     RctS.a [
         match customClass with | Some customClass -> yield ClassName customClass :> IHTMLProp | None -> ()
         match linkType with
+        | Internal onClick ->
+            yield OnClick onClick :> IHTMLProp
         | NewWindow url ->
             yield Href url :> IHTMLProp
             yield Target "_blank" :> IHTMLProp
-        | SameWindow url ->
-            yield Href url :> IHTMLProp
         | DownloadFile (url, fileName) ->
             yield Href url :> IHTMLProp
             yield Download fileName :> IHTMLProp
-        | ClickableLink onClick ->
-            yield OnClick onClick :> IHTMLProp
     ] children
 
 let media theme left content right =
@@ -295,6 +299,25 @@ let progress theme useAlternativeClass progressData =
         yield Progress.Value progressData.Value
         yield Progress.Max progressData.MaxValue
     ] []
+
+let radioInline theme radioData (key:Guid) text isChecked disabled onChange =
+    let radioData = theme.TransformRadioData radioData
+    let colour =
+        match radioData.RadioSemantic with
+        | Some Primary -> Some IsPrimary | Some Info -> Some IsInfo | Some Link -> Some IsLink
+        | Some Success -> Some IsSuccess | Some Warning -> Some IsWarning | Some Danger -> Some IsDanger
+        | Some Dark -> Some IsDark | Some Light -> Some IsLight | Some Black -> Some IsBlack | Some White -> Some IsWhite
+        | None -> None
+    let size = match radioData.RadioSize with | Large -> Some IsLarge | Medium -> Some IsMedium | Normal -> None | Small -> Some IsSmall
+    Checkradio.radioInline [
+        yield Checkradio.Id(key.ToString())
+        match size with | Some size -> yield Checkradio.Size size | None -> ()
+        if radioData.HasBackgroundColour then yield Checkradio.HasBackgroundColor
+        match colour with | Some colour -> yield Checkradio.Color colour | None -> ()
+        yield Checkradio.Checked isChecked
+        yield Checkradio.Disabled disabled
+        yield Checkradio.OnChange onChange
+    ] [ text ]
 
 // TODO-NMB-MEDIUM: "Genericize"?...
 let select theme values (defaultValue:string option) disabled (onChange:string -> unit) =
