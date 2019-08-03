@@ -36,8 +36,8 @@ let private semanticAndSortOrder authUserId (userId, userAuthDto) =
         | Self -> Link, 0
         | RecentlyActive -> Success, 1
         | SignedIn -> Primary, 2
-        | NotSignedIn -> Black, 3
-    | None -> White, 5 // note: should never happen
+        | NotSignedIn -> Dark, 3
+    | None -> Light, 5 // note: should never happen
 
 // #region renderChatMessage
 let private renderChatMessage theme authUserId (userDic:UserDic) dispatch (chatMessageId, chatMessage) =

@@ -32,8 +32,8 @@ let private (|Self|RecentlyActive|SignedIn|NotSignedIn|PersonaNonGrata|) (authUs
 let private semantic authUserId (userId, userAuthDto) =
     match userAuthDto with
     | Some userAuthDto ->
-        match (authUserId, userId, userAuthDto) with | Self -> Link | RecentlyActive -> Success | SignedIn -> Primary | NotSignedIn -> Black | PersonaNonGrata -> White
-    | None -> Light // note: should never happen
+        match (authUserId, userId, userAuthDto) with | Self -> Link | RecentlyActive -> Success | SignedIn -> Primary | NotSignedIn -> Dark | PersonaNonGrata -> Light
+    | None -> White // note: should never happen
 
 let private userTypes = [ SuperUser ; Administrator ; Pleb ; PersonaNonGrata ] |> List.map (fun userType -> userType, Guid.NewGuid())
 
