@@ -17,8 +17,7 @@ type PlayerId = | PlayerId of guid : Guid with static member Create () = Guid.Ne
 
 type PlayerName = | PlayerName of playerName : string
 
-// TODO-NMB: Forward | Back...
-type PlayerType = | Goalkeeper | Defender | Midfielder | Forward
+type PlayerType = | Forward | Back
 
 type PlayerStatus = | Active | Withdrawn of dateWithdrawn : DateTimeOffset option
 
@@ -26,7 +25,6 @@ type PickedBy = UserId * DraftOrdinal option * DateTimeOffset
 
 type PlayerDto = { PlayerId : PlayerId ; PlayerName : PlayerName ; PlayerType : PlayerType ; PlayerStatus : PlayerStatus ; PickedBy : PickedBy option }
 
-// TODO-NMB: Seeding option...
 type SquadOnlyDto = { SquadId : SquadId ; Rvn : Rvn ; SquadName : SquadName ; Group : Group ; Seeding : Seeding option ; CoachName : CoachName ; Eliminated : bool ; PickedBy : PickedBy option }
 
 type SquadDto = { SquadOnlyDto : SquadOnlyDto ; PlayerDtos : PlayerDto list }
@@ -36,8 +34,7 @@ let [<Literal>] MAX_PLAYERS_PER_SQUAD = 23
 
 let squadIsFullText = sprintf "Squad contains the maximum of %i non-withdrawn players" MAX_PLAYERS_PER_SQUAD
 
-// TODO-NMB: Forward | Back...
-let playerTypeText playerType = match playerType with | Goalkeeper -> "Goalkeeper" | Defender -> "Defender" | Midfielder -> "Midfielder" | Forward -> "Forward"
+let playerTypeText playerType = match playerType with Forward -> "Forward" | Back -> "Back"
 
 let validateSquadName (squadNames:SquadName list) (SquadName squadName) =
     if String.IsNullOrWhiteSpace squadName then "Squad name must not be blank" |> Some

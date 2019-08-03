@@ -317,25 +317,24 @@ let private playerTypeAndWithdrawn (squadDic:SquadDic) (squadId, playerId) =
 let private teamPickCount (alreadyPicked:DraftPickSet) =
     alreadyPicked |> List.ofSeq |> List.filter (fun draftPick -> match draftPick with | TeamPicked _ -> true | PlayerPicked _ -> false) |> List.length
 
-let private goalkeeperPickCount (squadDic:SquadDic) (alreadyPicked:DraftPickSet) =
+let private forwardPickCount (squadDic:SquadDic) (alreadyPicked:DraftPickSet) =
     alreadyPicked |> List.ofSeq |> List.filter (fun draftPick ->
         match draftPick with
         | TeamPicked _ -> false
-        | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Goalkeeper, false) -> true | _ -> false) |> List.length
+        | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Forward, false) -> true | _ -> false) |> List.length
 
-let private outfieldPlayerPickCount (squadDic:SquadDic) (alreadyPicked:DraftPickSet) =
+let private backPickCount (squadDic:SquadDic) (alreadyPicked:DraftPickSet) =
     alreadyPicked |> List.ofSeq |> List.filter (fun draftPick ->
         match draftPick with
         | TeamPicked _ -> false
-        | PlayerPicked (squadId, playerId) ->
-            match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Goalkeeper, _) -> false | Some (_, false) -> true | _ -> false) |> List.length
+        | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Back, false) -> true | _ -> false) |> List.length
 
 let private ignoreNoLongerRequired draftId (squadDic:SquadDic) (userStatuses:UserStatus list) =
     let isTeamRequired (alreadyPicked:DraftPickSet) = alreadyPicked |> teamPickCount < MAX_TEAM_PICKS
     let isPlayerRequired (alreadyPicked:DraftPickSet) (squadId, playerId) =
         match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with
-        | Some (Goalkeeper, _) -> alreadyPicked |> goalkeeperPickCount squadDic < MAX_GOALKEEPER_PICKS
-        | Some (_) -> alreadyPicked |> outfieldPlayerPickCount squadDic < MAX_OUTFIELD_PLAYER_PICKS
+        | Some (Forward, _) -> alreadyPicked |> forwardPickCount squadDic < MAX_FORWARD_PICKS
+        | Some (Back, _) -> alreadyPicked |> backPickCount squadDic < MAX_BACK_PICKS
         | None -> false // note: should never happen
     let ignored = Dictionary<UserId, HashSet<DraftPick>> ()
     let userStatuses =
@@ -894,20 +893,19 @@ type Drafts () =
                     |> Result.bind (fun (draftId, draft, existingPicks) ->
                         let userPicks = existingPicks |> List.choose (fun (draftPick, userId) -> if userId = auditUserId then draftPick |> Some else None)
                         let teamCount = userPicks |> List.filter (fun draftPick -> match draftPick with | TeamPicked _-> true | PlayerPicked _ -> false ) |> List.length
-                        let goalkeeperCount =
+                        let forwardCount =
                             userPicks
                             |> List.filter (fun draftPick ->
                                 match draftPick with
                                 | TeamPicked _ -> false
-                                | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Goalkeeper, false) -> true | _ -> false)
+                                | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Forward, false) -> true | _ -> false)
                             |> List.length
-                        let outfieldPlayerCount =
+                        let backCount =
                             userPicks
                             |> List.filter (fun draftPick ->
                                 match draftPick with
                                 | TeamPicked _ -> false
-                                | PlayerPicked (squadId, playerId) ->
-                                    match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Goalkeeper, _) -> false | Some (_, false) -> true | _ -> false)
+                                | PlayerPicked (squadId, playerId) -> match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with | Some (Back, false) -> true | _ -> false)
                             |> List.length
                         let ok = (draftId, draft) |> Ok
                         match draftPick with
@@ -915,10 +913,10 @@ type Drafts () =
                             if teamCount < MAX_TEAM_PICKS then ok else ifDebug "Team/coach is not required" UNEXPECTED_ERROR |> otherCmdError source
                         | PlayerPicked (squadId, playerId) ->
                             match (squadId, playerId) |> playerTypeAndWithdrawn squadDic with
-                            | Some (Goalkeeper, _) ->
-                                if goalkeeperCount < MAX_GOALKEEPER_PICKS then ok else ifDebug "Goalkeeper is not required" UNEXPECTED_ERROR |> otherCmdError source
-                            | Some _ ->
-                                if outfieldPlayerCount < MAX_OUTFIELD_PLAYER_PICKS then ok else ifDebug "Outfield player is not required" UNEXPECTED_ERROR |> otherCmdError source
+                            | Some (Forward, _) ->
+                                if forwardCount < MAX_FORWARD_PICKS then ok else ifDebug "Forward is not required" UNEXPECTED_ERROR |> otherCmdError source
+                            | Some (Back, _) ->
+                                if backCount < MAX_BACK_PICKS then ok else ifDebug "Backr is not required" UNEXPECTED_ERROR |> otherCmdError source
                             | None -> UNEXPECTED_ERROR |> otherCmdError source)
                     |> Result.bind (fun (draftId, draft) ->
                         (draftId, draftPick, auditUserId, DateTimeOffset.UtcNow) |> FreePick |> tryApplyDraftEvent source draftId (draft |> Some) (incrementRvn currentRvn) draftPick)

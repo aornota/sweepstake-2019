@@ -55,9 +55,8 @@ type CurrentUserDraftDto = { UserDraftKey : UserDraftKey ; Rvn : Rvn ; UserDraft
 type UserDraftSummaryDto = { UserDraftKey : UserDraftKey ; PickCount : int }
 
 let [<Literal>] MAX_TEAM_PICKS = 1
-// TODO-NMB: MAX_FORWARD_PICKS | MAX_BACK_PICKS...
-let [<Literal>] MAX_GOALKEEPER_PICKS = 1
-let [<Literal>] MAX_OUTFIELD_PLAYER_PICKS = 10
+let [<Literal>] MAX_FORWARD_PICKS = 8
+let [<Literal>] MAX_BACK_PICKS = 7
 
 let draftText (DraftOrdinal draftOrdinal) =
     if draftOrdinal = 1 then "First draft"

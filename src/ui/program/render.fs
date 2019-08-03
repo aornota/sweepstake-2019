@@ -306,28 +306,28 @@ let private renderSigningOutModal useDefaultTheme =
 
 let private userDraftPickSummary theme (squadDic:SquadDic) (userDraftPickDtos:UserDraftPickDto list) =
     let isTeamPick userDraftPick = match userDraftPick with | TeamPick _ -> true | PlayerPick _ -> false
-    let isGoalkeeper squadDic userDraftPick =
+    let isForward squadDic userDraftPick =
         match userDraftPick with
         | TeamPick _ -> false
-        | PlayerPick (squadId, playerId) -> match (squadId, playerId) |> playerType squadDic with | Some Goalkeeper -> true | _ -> false
-    let isOutfieldPlayer squadDic userDraftPick =
+        | PlayerPick (squadId, playerId) -> match (squadId, playerId) |> playerType squadDic with | Some Forward -> true | _ -> false
+    let isBack squadDic userDraftPick =
         match userDraftPick with
         | TeamPick _ -> false
-        | PlayerPick (squadId, playerId) -> match (squadId, playerId) |> playerType squadDic with | Some Defender | Some Midfielder | Some Forward -> true | _ -> false
+        | PlayerPick (squadId, playerId) -> match (squadId, playerId) |> playerType squadDic with | Some Back -> true | _ -> false
     let userDraftPicks = userDraftPickDtos |> List.map (fun userDraftPickDto -> userDraftPickDto.UserDraftPick)
     let teamCount = userDraftPicks |> List.filter isTeamPick |> List.length
-    let goalkeeperCount = userDraftPicks |> List.filter (isGoalkeeper squadDic) |> List.length
-    let outfieldPlayerCount = userDraftPicks |> List.filter (isOutfieldPlayer squadDic) |> List.length
+    let forwardCount = userDraftPicks |> List.filter (isForward squadDic) |> List.length
+    let backCount = userDraftPicks |> List.filter (isBack squadDic) |> List.length
     let counts = [
         if teamCount > 0 then
             let teamPlural, coachPlural = if teamCount > 1 then "s", "es" else String.Empty, String.Empty
             yield sprintf "%i team%s/coach%s" teamCount teamPlural coachPlural
-        if goalkeeperCount > 0 then
-            let plural = if goalkeeperCount > 1 then "s" else String.Empty
-            yield sprintf "%i goalkeeper%s" goalkeeperCount plural
-        if outfieldPlayerCount > 0 then
-            let plural = if outfieldPlayerCount > 1 then "s" else String.Empty
-            yield sprintf "%i outfield player%s" outfieldPlayerCount plural ]
+        if forwardCount > 0 then
+            let plural = if forwardCount > 1 then "s" else String.Empty
+            yield sprintf "%i forward%s" forwardCount plural
+        if backCount > 0 then
+            let plural = if backCount > 1 then "s" else String.Empty
+            yield sprintf "%i back%s" backCount plural ]
     let items = counts.Length
     let counts = counts |> List.mapi (fun i item -> if i = 0 then item else if i + 1 < items then sprintf ", %s" item else sprintf " and %s" item)
     let counts = counts |> List.fold (fun text item -> sprintf "%s%s" text item) String.Empty

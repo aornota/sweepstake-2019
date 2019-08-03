@@ -407,7 +407,7 @@ let transition input (authUser:AuthUser option) (squadsProjection:Projection<_ *
             | None -> // note: should never happen
                 state, Cmd.none, false
         | ShowAddPlayersModal squadId, Ready _ -> // note: no need to check for unknown squadId (should never happen)
-            let addPlayersState = defaultAddPlayersState squadId Goalkeeper None None
+            let addPlayersState = defaultAddPlayersState squadId Forward None None
             { state with AddPlayersState = addPlayersState |> Some }, Cmd.none, true
         | AddPlayersInput addPlayersInput, Ready (_, squadDic) ->
             state |> handleAddPlayersInput addPlayersInput squadDic

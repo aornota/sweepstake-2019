@@ -66,12 +66,6 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                     let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
                     [ str squadText ] |> para theme paraDefaultSmallest |> Some, eliminated
                 | None -> None, None
-            let playerCount playerType =
-                players
-                |> List.filter (fun (_, _, player) -> match player.PlayerStatus with | Active -> player.PlayerType = playerType | Withdrawn _ -> false)
-                |> List.length
-            let defenderCount, midfielderCount, forwardCount = Defender |> playerCount, Midfielder |> playerCount, Forward |> playerCount
-            let formation = sprintf "%i-%i-%i" defenderCount midfielderCount forwardCount
             let playersRemaining =
                 players
                 |> List.filter (fun (_, _, player) -> match player.PlayerStatus with | Active -> true | Withdrawn _ -> false)
@@ -94,7 +88,6 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                 td [ [ [ str userName ] |> para theme paraDefaultSmallest ] |> link theme (Internal onClick) ]
                 td [ RctH.ofOption squad ]
                 td [ RctH.ofOption eliminated ]
-                td [ [ str formation ] |> para theme paraCentredSmallest ]
                 td [ [ str (sprintf "%i" playersRemaining ) ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                 td [ RctH.ofOption pointsChange ] ]
@@ -205,7 +198,6 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                     th [ [ strong "Name" ] |> para theme paraDefaultSmallest ]
                     th [ [ strong "Team/coach"] |> para theme paraDefaultSmallest ]
                     th []
-                    th [ [ strong "Formation" ] |> para theme paraCentredSmallest ]
                     th [ [ strong "Players remaining" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                     th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
                     th [] ] ]
@@ -236,11 +228,9 @@ let private bestTabs currentBest dispatch =
         match best with
         | Teams -> "Teams/coaches"
         | Players -> "Players"
-        | Goalkeepers -> "Goalkeepers"
-        | Defenders -> "Defenders"
-        | Midfielders -> "Midfielders"
         | Forwards -> "Forwards"
-    let bests = [ Teams ; Players ; Goalkeepers ; Defenders ; Midfielders ; Forwards ]
+        | Backs -> "Backs"
+    let bests = [ Teams ; Players ; Forwards ; Backs ]
     bests |> List.map (fun best -> { IsActive = best = currentBest ; TabText = best |> bestText ; TabLinkType = Internal (fun _ -> best |> Some |> dispatch) })
 
 // #region customAgo
@@ -454,10 +444,8 @@ let private renderBest (useDefaultTheme, best, unpickedOnly, squadDic, userDic, 
     match best with
     | Teams -> renderBestTeams (useDefaultTheme, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
     | Players -> renderBestPlayers (useDefaultTheme, None, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
-    | Goalkeepers -> renderBestPlayers (useDefaultTheme, Goalkeeper |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
-    | Defenders -> renderBestPlayers (useDefaultTheme, Defender |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
-    | Midfielders -> renderBestPlayers (useDefaultTheme, Midfielder |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
     | Forwards -> renderBestPlayers (useDefaultTheme, Forward |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
+    | Backs -> renderBestPlayers (useDefaultTheme, Forward |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
 
 let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Projection<_ * UserDic>, squadsProjection:Projection<_ * SquadDic>, fixturesProjection:Projection<_ * FixtureDic>) dispatch =
     let theme = getTheme useDefaultTheme

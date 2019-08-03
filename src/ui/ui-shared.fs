@@ -125,27 +125,28 @@ let pickedByUser (squadDic:SquadDic) userId =
     squad, players
 let pickedCounts (squad:(_ * Squad * _ * _) option, players:(_ * _ * _ * Player * _ * _) list) =
     let teamCount = match squad with | Some _ -> 1 | None -> 0
-    let goalkeeperCount = players |> List.filter (fun (_, _, _, player, _, _) -> match player.PlayerType, player.PlayerStatus with | Goalkeeper, Active _ -> true | _ -> false) |> List.length
-    let outfieldPlayerCount =
-        players |> List.filter (fun (_, _, _, player, _, _) ->
-            match player.PlayerType, player.PlayerStatus with | Goalkeeper, _ -> false | _, Active -> true | _ -> false) |> List.length
-    teamCount, goalkeeperCount, outfieldPlayerCount
-let required (pickedTeamCount, pickedGoalkeeperCount, pickedOutfieldPlayerCount) =
+    let forwardCount = players |> List.filter (fun (_, _, _, player, _, _) -> match player.PlayerType, player.PlayerStatus with | Forward, Active _ -> true | _ -> false) |> List.length
+    let backCount = players |> List.filter (fun (_, _, _, player, _, _) -> match player.PlayerType, player.PlayerStatus with | Back, Active _ -> true | _ -> false) |> List.length
+    teamCount, forwardCount, backCount
+let required (pickedTeamCount, pickedForwardCount, pickedBackCount) =
     let required = [
         if pickedTeamCount < MAX_TEAM_PICKS then yield "1 team/coach"
-        if pickedGoalkeeperCount < MAX_GOALKEEPER_PICKS then yield "1 goalkeeper"
-        let requiredOutfieldPlayers = MAX_OUTFIELD_PLAYER_PICKS - pickedOutfieldPlayerCount
-        if requiredOutfieldPlayers > 0 then
-            let plural = if requiredOutfieldPlayers > 1 then "s" else String.Empty
-            yield sprintf "%i outfield player%s" requiredOutfieldPlayers plural ]
+        let requiredForwards = MAX_FORWARD_PICKS - pickedForwardCount
+        if requiredForwards > 0 then
+            let plural = if requiredForwards > 1 then "s" else String.Empty
+            yield sprintf "%i forward%s" requiredForwards plural
+        let requiredBacks = MAX_BACK_PICKS - pickedBackCount
+        if requiredBacks > 0 then
+            let plural = if requiredBacks > 1 then "s" else String.Empty
+            yield sprintf "%i back%s" requiredBacks plural ]
     let items = required.Length
     if items > 0 then
         let required = required |> List.mapi (fun i item -> if i = 0 then item else if i + 1 < items then sprintf ", %s" item else sprintf " and %s" item)
         let required = required |> List.fold (fun text item -> sprintf "%s%s" text item) String.Empty
         required |> Some
     else None
-let stillRequired (pickedTeamCount, pickedGoalkeeperCount, pickedOutfieldPlayerCount) =
-    match (pickedTeamCount, pickedGoalkeeperCount, pickedOutfieldPlayerCount) |> required with
+let stillRequired (pickedTeamCount, pickedForwardCount, pickedBackCount) =
+    match (pickedTeamCount, pickedForwardCount, pickedBackCount) |> required with
     | Some required -> sprintf "%s still required" required |> Some
     | None -> None
 

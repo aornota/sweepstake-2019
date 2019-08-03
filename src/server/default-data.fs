@@ -6,7 +6,6 @@ open Aornota.Sweepstake2019.Common.Domain.Fixture
 open Aornota.Sweepstake2019.Common.Domain.Squad
 open Aornota.Sweepstake2019.Common.Domain.User
 open Aornota.Sweepstake2019.Common.IfDebug
-open Aornota.Sweepstake2019.Common.Revision
 open Aornota.Sweepstake2019.Common.WsApi.ServerMsg
 open Aornota.Sweepstake2019.Server.Agents.ConsoleLogger
 open Aornota.Sweepstake2019.Server.Agents.Entities.Drafts
@@ -663,5 +662,5 @@ let createInitialPersistedEventsIfNecessary = async {
     do! createInitialUsersEventsIfNecessary // note: although this can cause various events to be broadcast (UsersRead | UserEventWritten | &c.), no agents should yet be subscribed to these
     do! createInitialSquadsEventsIfNecessary // note: although this can cause various events to be broadcast (SquadsRead | SquadEventWritten | &c.), no agents should yet be subscribed to these
     do! createInitialFixturesEventsIfNecessary // note: although this can cause various events to be broadcast (FixturesRead | FixtureEventWritten | &c.), no agents should yet be subscribed to these
-    // TODO-NMB...do! createInitialDraftsEventsIfNecessary // note: although this can cause various events to be broadcast (DraftsRead | DraftEventWritten | &c.), no agents should yet be subscribed to these
+    do! createInitialDraftsEventsIfNecessary // note: although this can cause various events to be broadcast (DraftsRead | DraftEventWritten | &c.), no agents should yet be subscribed to these
     previousLogFilter |> consoleLogger.ChangeLogFilter }

@@ -20,9 +20,9 @@ open System
 
 module RctH = Fable.React.Helpers
 
-let private playerTypes = [ Goalkeeper ; Defender ; Midfielder ; Forward ] |> List.map (fun playerType -> playerType, Guid.NewGuid())
+let private playerTypes = [ Forward ; Back ] |> List.map (fun playerType -> playerType, Guid.NewGuid())
 
-let private playerTypeSortOrder playerType = match playerType with | Goalkeeper -> 1 | Defender -> 2 | Midfielder -> 3 | Forward -> 4
+let private playerTypeSortOrder playerType = match playerType with | Forward -> 1 | Back -> 2
 let private playerTypeRadios theme selectedPlayerType currentPlayerType disableAll dispatch =
     let onChange playerType = (fun _ -> playerType |> dispatch)
     playerTypes
@@ -467,9 +467,9 @@ let private renderSquad (useDefaultTheme, squadId, squad, currentDraft, pickedCo
 
 let private renderPlayers (useDefaultTheme, playerDic:PlayerDic, squadId, squad, currentDraft, pickedCounts, userDraftPickDic, pendingPicks, userDic:UserDic, fixtureDic:FixtureDic, authUser) dispatch =
     let theme = getTheme useDefaultTheme
-    let _, pickedGoalkeeperCount, pickedOutfieldPlayerCount = pickedCounts
-    let needsGoalkeeper = pickedGoalkeeperCount < MAX_GOALKEEPER_PICKS
-    let needsOutfieldPlayers = MAX_OUTFIELD_PLAYER_PICKS - pickedOutfieldPlayerCount > 0
+    let _, pickedForwardCount, pickedBackCount = pickedCounts
+    let needsForwards = pickedForwardCount < MAX_FORWARD_PICKS
+    let needsBacks = pickedBackCount < MAX_BACK_PICKS
     let canEdit, canWithdraw =
         match authUser with
         | Some authUser ->
@@ -503,7 +503,7 @@ let private renderPlayers (useDefaultTheme, playerDic:PlayerDic, squadId, squad,
     let draftLeftAndRight playerId (player:Player) =
         let isPicked = match player.PickedBy with | Some _ -> true | None -> false
         let isWithdrawn, _ = player |> isWithdrawnAndDate
-        let needsMorePicks = match player.PlayerType with | Goalkeeper -> needsGoalkeeper | _ -> needsOutfieldPlayers
+        let needsMorePicks = match player.PlayerType with | Forward -> needsForwards | _ -> needsBacks
         let activeDraftIdAndOrdinalAndIsOpen = activeDraftIdAndOrdinalAndIsOpen authUser currentDraft
         let freePickDraftId = freePickDraftId authUser currentDraft
         match isPicked, isWithdrawn, activeDraftIdAndOrdinalAndIsOpen, freePickDraftId with

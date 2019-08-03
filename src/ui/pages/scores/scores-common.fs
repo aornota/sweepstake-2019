@@ -2,7 +2,7 @@ module Aornota.Sweepstake2019.Ui.Pages.Scores.Common
 
 open Aornota.Sweepstake2019.Common.Domain.User
 
-type Best = | Teams | Players | Goalkeepers | Defenders | Midfielders | Forwards
+type Best = | Teams | Players | Forwards | Backs
 
 type ScoresFilter =
     | Sweepstaker of userId : UserId option
