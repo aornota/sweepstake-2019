@@ -271,7 +271,6 @@ let private renderSweepstakerSquad (useDefaultTheme, userId, squadId, squad, dra
     div divCentred [
         let (SquadName squadName), (CoachName coachName) = squad.SquadName, squad.CoachName
         let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
-        let seeding = match squad.Seeding with | Some (Seeding seeding) -> [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest |> Some | None -> None
         let points, pickedByPoints = teamPoints fixtureDic squadId (timestamp |> Some)
         let score = score points pickedByPoints (userId |> Some) userDic
         yield table theme false { tableDefault with IsNarrow = true } [
@@ -287,7 +286,7 @@ let private renderSweepstakerSquad (useDefaultTheme, userId, squadId, squad, dra
                 tr false [
                     td [ [ str squadName ] |> para theme paraDefaultSmallest ]
                     td [ RctH.ofOption eliminated ]
-                    td [ RctH.ofOption seeding ]
+                    td [ [ str (squad.Seeding |> seedingText) ] |> para theme paraCentredSmallest ]
                     td [ [ str coachName ] |> para theme paraDefaultSmallest ]
                     td [ RctH.ofOption ((draftOrdinal, timestamp) |> pickedIn theme) ]
                     td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ] ] ]
@@ -347,13 +346,12 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
         let squadRow (squad, points, pickedByPoints, pickedByUserId) =
             let (SquadName squadName), (CoachName coachName) = squad.SquadName, squad.CoachName
             let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
-            let seeding = match squad.Seeding with | Some (Seeding seeding) -> [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest |> Some | None -> None
             let pickedByTag = if unpickedOnly |> not then squad.PickedBy |> pickedByTag theme userDic authUser else None
             let score = score points pickedByPoints pickedByUserId userDic
             tr false [
                 td [ [ str squadName ] |> para theme paraDefaultSmallest ]
                 td [ RctH.ofOption eliminated ]
-                td [ RctH.ofOption seeding ]
+                td [ [ str (squad.Seeding |> seedingText) ] |> para theme paraCentredSmallest ]
                 td [ [ str coachName ] |> para theme paraDefaultSmallest ]
                 td [ RctH.ofOption pickedByTag ]
                 td [ [ score ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ]

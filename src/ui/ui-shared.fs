@@ -52,6 +52,7 @@ let userType (userDic:UserDic) userId =
 let userNames (userDic:UserDic) = userDic |> List.ofSeq |> List.map (fun (KeyValue (_, (userName, _))) -> userName)
 
 let squadName (squadDic:SquadDic) squadId = if squadId |> squadDic.ContainsKey then squadDic.[squadId].SquadName else SquadName UNKNOWN
+let seedingText seeding = match seeding with | Some (Seeding seeding) when seeding <= 8 -> sprintf "%i" seeding | _ -> "N/A"
 
 let playerName (squadDic:SquadDic) (squadId, playerId) =
     if squadId |> squadDic.ContainsKey then

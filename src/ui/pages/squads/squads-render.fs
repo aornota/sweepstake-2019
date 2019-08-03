@@ -409,7 +409,6 @@ let private renderSquad (useDefaultTheme, squadId, squad, currentDraft, pickedCo
         | Some authUser -> match authUser.Permissions.SquadPermissions with | Some squadPermissions -> squadPermissions.EliminateSquadPermission | None -> false
         | None -> false
     let eliminated = if squad.Eliminated then [ [ str "Eliminated" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme paraDefaultSmallest |> Some else None
-    let seeding = match squad.Seeding with | Some (Seeding seeding) -> [ str (sprintf "%i" seeding) ] |> para theme paraCentredSmallest |> Some | None -> None
     let eliminate =
         if canEliminate && squad.Eliminated |> not then
             let pendingFixtures =
@@ -457,7 +456,7 @@ let private renderSquad (useDefaultTheme, squadId, squad, currentDraft, pickedCo
                 tr false [
                     td [ [ str squadName ] |> para theme paraDefaultSmallest ]
                     td [ RctH.ofOption eliminated ]
-                    td [ RctH.ofOption seeding ]
+                    td [ [ str (squad.Seeding |> seedingText) ] |> para theme paraCentredSmallest ]
                     td [ [ str coachName ] |> para theme paraDefaultSmallest ]
                     td [ RctH.ofOption draftLeft ]
                     td [ RctH.ofOption draftRight ]
