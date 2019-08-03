@@ -110,7 +110,7 @@ NUGET
     FSharp.Control.Reactive (4.2)
       FSharp.Core (>= 4.2.3)
       System.Reactive (>= 4.0)
-    FSharp.Core (4.7)
+    FSharp.Core (4.6)
     Microsoft.Azure.Management.ResourceManager.Fluent (1.4.1)
       Microsoft.Rest.ClientRuntime.Azure (>= 3.3.10)
       Microsoft.Rest.ClientRuntime.Azure.Authentication (>= 2.3.1)
