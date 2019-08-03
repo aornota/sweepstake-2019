@@ -37,7 +37,7 @@ type private MatchEventDic = Dictionary<MatchEventId, MatchEvent>
 type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchEventDic : MatchEventDic }
 type private FixtureDic = Dictionary<FixtureId, Fixture>
 
-type private SquadDic = Dictionary<SquadId, Seeding>
+type private SquadDic = Dictionary<SquadId, Seeding option>
 
 type private Projectee = { LastRvn : Rvn }
 type private ProjecteeDic = Dictionary<ConnectionId, Projectee>
@@ -104,6 +104,7 @@ let private teamScoreEvents fixture role forSquadId againstSquadId (cards:((Squa
     let seeding squadId = if squadId |> squadDic.ContainsKey then squadDic.[squadId] |> Some else None
     match forSquadId |> seeding, againstSquadId |> seeding with
     | Some forSeeding, Some againstSeeding ->
+        let isTop8 seeding = match seeding with | Some seeding -> seeding <= Seeding 8 | None -> false
         let matchResult =
             match matchOutcome.PenaltyShootoutOutcome with
             | Some penaltyShootoutOutcome ->
@@ -112,16 +113,16 @@ let private teamScoreEvents fixture role forSquadId againstSquadId (cards:((Squa
                 if matchOutcome.HomeGoals > matchOutcome.AwayGoals then HomeWin
                 else if matchOutcome.HomeGoals < matchOutcome.AwayGoals then AwayWin
                 else Draw
-        let forIsTop16, againstIsTop16 = forSeeding <= Seeding 16, againstSeeding <= Seeding 16
+        let forIsTop8, againstIsTop8 = forSeeding |> isTop8, againstSeeding |> isTop8
         let matchResultEvent =
             match role, matchResult with
             | Home, HomeWin | Away, AwayWin ->
-                let points = match forIsTop16, againstIsTop16 with | true, false -> 12<point> | false, true -> 20<point> | _ -> 16<point>
+                let points = match forIsTop8, againstIsTop8 with | true, false -> 12<point> | false, true -> 20<point> | _ -> 16<point>
                 [ MatchWon, points ]
             | _, Draw ->
                 match fixture.Stage with
                 | Group _ ->
-                    let points = match forIsTop16, againstIsTop16 with | true, false -> 4<point> | false, true -> 8<point> | _ -> 6<point>
+                    let points = match forIsTop8, againstIsTop8 with | true, false -> 4<point> | false, true -> 8<point> | _ -> 6<point>
                     [ MatchDrawn, points ]
                 | _ -> [] // note: no draws for knockout matches
             | Home, AwayWin | Away, HomeWin -> []
