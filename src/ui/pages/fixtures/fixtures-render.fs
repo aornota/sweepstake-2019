@@ -255,7 +255,6 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     divVerticalSpace 5
                 ]
             interaction, contents
-    let contents = match contents with | _ :: _ -> contents | [] -> [ [ str "Coming soon" ] |> para theme paraCentredSmaller ; br ] // note: should never happen
     let body = [
         match errorText with
         | Some errorText ->
