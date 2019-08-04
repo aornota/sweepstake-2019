@@ -117,29 +117,21 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
     let fixtureId, squadId, addMatchEvent = addMatchEventState.FixtureId, addMatchEventState.SquadId, addMatchEventState.AddMatchEvent
     let matchEvents = if fixtureId |> fixtureDic.ContainsKey then match fixtureDic.[fixtureId].MatchResult with | Some matchResult -> matchResult.MatchEvents | None -> [] else []
     let squad = if squadId |> squadDic.ContainsKey then squadDic.[squadId] |> Some else None
-    let addText, titleText, appendSquad =
+    let addText =
         match addMatchEvent with
-        | GoalEvent _ -> "Add goal", "Add goal", true
-        | OwnGoalEvent _ -> "Add own goal", "Add own goal", true
-        | PenaltyEvent (_, opponentHasCleanSheet, _, _, _) ->
-            let titleText = if opponentHasCleanSheet then "Add missed/saved penalty" else "Add penalty"
-            "Add penalty", titleText, true
-        | CardEvent _ -> "Add card", "Add card", true
-        | CleanSheetEvent _ -> "Add clean sheet", "Add clean sheet", true
-        | PenaltyShootoutEvent (awaySquadId, _, _) ->
-            let awaySquad = if awaySquadId |> squadDic.ContainsKey then squadDic.[awaySquadId] |> Some else None
-            match squad, awaySquad with
-            | Some squad, Some awaySquad ->
-                let (SquadName squadName), (SquadName awaySquadName) = squad.SquadName, awaySquad.SquadName
-                "Add penalty shootout", sprintf "Add penalty shootout for %s and %s" squadName awaySquadName, false
-            | _ -> "Add penalty shootout", "Add penalty shootout", false // note: should never happen
-        | ManOfTheMatchEvent _ -> "Add man-of-the-match", "Add man-of-the-match", true
+        | TryEvent _ -> "Add try"
+        | PenaltyTryEvent -> "Add penalty try"
+        | PenaltyKickEvent _ -> "Add penalty kick"
+        | ConversionEvent _ -> "Add conversion"
+        | DropGoalEvent _ -> "Add drop goal"
+        | CardEvent _ -> "Add card"
+        | ManOfTheMatchEvent _ -> "Add man-of-the-match"
     let titleText =
-        match appendSquad, squad with
-        | true, Some squad ->
+        match squad with
+        | Some squad ->
             let (SquadName squadName) = squad.SquadName
-            sprintf "%s for %s" titleText squadName
-        | _ -> titleText
+            sprintf "%s for %s" addText squadName
+        | _ -> addText
     let title = [ [ strong titleText ] |> para theme paraCentredSmall ]
     let isAdding, onDismiss =
         match addMatchEventState.AddMatchEventStatus with
@@ -149,109 +141,73 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
     let addMatchEventInteraction = Clickable ((fun _ -> AddMatchEvent |> dispatch), None)
     let addMatchEventInteraction, contents =
         match addMatchEvent with
-        | GoalEvent (playerId, assistedBy) ->
-            let interaction = match playerId with | Some playerId when playerId |> Some <> assistedBy -> addMatchEventInteraction | _ -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
-            let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-            let defaultAssistedByValue = match assistedBy with | Some assistedBy -> assistedBy |> toJson |> Some | None -> String.Empty |> Some
-            let contents =
-                [
-                    [ str "Please enter the player who scored the goal and (optionally) the player who assisted the goal" ] |> para theme paraCentredSmaller
-                    br
-                    field theme { fieldDefault with Grouped = Centred |> Some } [
-                        select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
-                    divVerticalSpace 5
-                    field theme { fieldDefault with Grouped = Centred |> Some } [
-                        select theme values defaultAssistedByValue isAdding (OtherPlayerSelected >> dispatch) ]
-                ]
-            interaction, contents
-        | OwnGoalEvent playerId ->
+        | TryEvent playerId ->
             let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
             let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let contents =
                 [
-                    [ str "Please select the player who scored the own goal" ] |> para theme paraCentredSmaller
+                    [ str "Please enter the player who scored the try" ] |> para theme paraCentredSmaller
                     br
                     field theme { fieldDefault with Grouped = Centred |> Some } [
                         select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
                     divVerticalSpace 5
                 ]
             interaction, contents
-        | PenaltyEvent (opponentSquadId, opponentHasCleanSheet, playerId, penaltyType, savedBy) ->
-            let scored, missed, saved = "Scored", "Missed", "Saved"
-            let onScored = (fun _ -> PenaltyScored |> PenaltyTypeChanged |> dispatch)
-            let onMissed = (fun _ -> PenaltyMissed |> PenaltyTypeChanged |> dispatch)
-            let onSaved = (fun _ -> PenaltySaved |> PenaltyTypeChanged |> dispatch)
-            match penaltyType with
-            | None ->
-                let scoredRadio, missedRadio, savedRadio =
-                    radioInline theme scored false (isAdding || opponentHasCleanSheet) onScored, radioInline theme missed false isAdding onMissed, radioInline theme saved false isAdding onSaved
-                let contents =
-                    [
-                        [ str "Please select the penalty type" ] |> para theme paraCentredSmaller
-                        br
-                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
-                        divVerticalSpace 5
-                    ]
-                NotEnabled None, contents
-            | Some PenaltyScored when opponentHasCleanSheet |> not ->
-                let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-                let scoredRadio, missedRadio, savedRadio =
-                    radioInline theme scored true isAdding onScored, radioInline theme missed false isAdding onMissed, radioInline theme saved false isAdding onSaved
-                let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
-                let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-                let contents =
-                    [
-                        [ str "Please select the player who scored the penalty" ] |> para theme paraCentredSmaller
-                        br
-                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
-                        divVerticalSpace 5
-                        field theme { fieldDefault with Grouped = Centred |> Some } [
-                            select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
-                        divVerticalSpace 5
-                    ]
-                interaction, contents
-            | Some PenaltyMissed ->
-                let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-                let scoredRadio, missedRadio, savedRadio =
-                    radioInline theme scored false isAdding onScored, radioInline theme missed true isAdding onMissed, radioInline theme saved false isAdding onSaved
-                let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
-                let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-                let contents =
-                    [
-                        [ str "Please select the player who missed the penalty" ] |> para theme paraCentredSmaller
-                        br
-                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
-                        divVerticalSpace 5
-                        field theme { fieldDefault with Grouped = Centred |> Some } [
-                            select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
-                        divVerticalSpace 5
-                    ]
-                interaction, contents
-            | Some PenaltySaved ->
-                let interaction = match playerId, savedBy with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
-                let scoredRadio, missedRadio, savedRadio =
-                    radioInline theme scored false isAdding onScored, radioInline theme missed false isAdding onMissed, radioInline theme saved true isAdding onSaved
-                let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
-                let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-                let savedByValues = (String.Empty, String.Empty) :: (opponentSquadId |> possiblePlayers squadDic)
-                let defaultSavedByValue = match savedBy with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-                let contents =
-                    [
-                        [ str "Please select the player who took the penalty and the player who saved the penalty" ] |> para theme paraCentredSmaller
-                        br
-                        field theme { fieldDefault with Grouped = Centred |> Some } [ scoredRadio ; missedRadio ; savedRadio ]
-                        divVerticalSpace 5
-                        field theme { fieldDefault with Grouped = Centred |> Some } [
-                            select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
-                        divVerticalSpace 5
-                        field theme { fieldDefault with Grouped = Centred |> Some } [
-                            select theme savedByValues defaultSavedByValue isAdding (OppositionPlayerSelected >> dispatch) ]
-                        divVerticalSpace 5
-                    ]
-                interaction, contents
-            | _ -> NotEnabled None, []
+        | PenaltyTryEvent -> addMatchEventInteraction, []
+        | PenaltyKickEvent (playerId, kickType) ->
+            let interaction = match playerId, kickType with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
+            let successful, missed = "Successful", "Missed"
+            let onSuccessful = (fun _ -> KickSuccessful |> KickTypeChanged |> dispatch)
+            let onMissed = (fun _ -> KickMissed |> KickTypeChanged |> dispatch)
+            let successfulRadio = radioInline theme successful (match kickType with | Some KickSuccessful -> true | _ -> false) isAdding onSuccessful
+            let missedRadio = radioInline theme missed (match kickType with | Some KickMissed -> true | _ -> false) isAdding onMissed
+            let contents =
+                [
+                    [ str "Please enter the player who took the penalty kick and whether the kick was successful" ] |> para theme paraCentredSmaller
+                    br
+                    field theme { fieldDefault with Grouped = Centred |> Some } [
+                        select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
+                    br
+                    field theme { fieldDefault with Grouped = Centred |> Some } [ successfulRadio ; missedRadio ]
+                    divVerticalSpace 5
+                ]
+            interaction, contents
+        | ConversionEvent (playerId, kickType) ->
+            let interaction = match playerId, kickType with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
+            let successful, missed = "Successful", "Missed"
+            let onSuccessful = (fun _ -> KickSuccessful |> KickTypeChanged |> dispatch)
+            let onMissed = (fun _ -> KickMissed |> KickTypeChanged |> dispatch)
+            let successfulRadio = radioInline theme successful (match kickType with | Some KickSuccessful -> true | _ -> false) isAdding onSuccessful
+            let missedRadio = radioInline theme missed (match kickType with | Some KickMissed -> true | _ -> false) isAdding onMissed
+            let contents =
+                [
+                    [ str "Please enter the player who took the conversion and whether the kick was successful" ] |> para theme paraCentredSmaller
+                    br
+                    field theme { fieldDefault with Grouped = Centred |> Some } [
+                        select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
+                    br
+                    field theme { fieldDefault with Grouped = Centred |> Some } [ successfulRadio ; missedRadio ]
+                    divVerticalSpace 5
+                ]
+            interaction, contents
+        | DropGoalEvent playerId ->
+            let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
+            let contents =
+                [
+                    [ str "Please enter the player who kicked the drop goal" ] |> para theme paraCentredSmaller
+                    br
+                    field theme { fieldDefault with Grouped = Centred |> Some } [
+                        select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
+                    divVerticalSpace 5
+                ]
+            interaction, contents
         | CardEvent (playerId, card) ->
             let interaction = match playerId, card with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
             let alreadyHasYellow =
@@ -284,65 +240,6 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                     yield divVerticalSpace 5
                     yield field theme { fieldDefault with Grouped = Centred |> Some } [ yellowRadio ; redRadio ]
                     yield divVerticalSpace 5
-                ]
-            interaction, contents
-        | CleanSheetEvent playerId ->
-            let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
-            let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
-            let contents =
-                [
-                    [ str "Please select the player who kept a clean sheet" ] |> para theme paraCentredSmaller
-                    br
-                    field theme { fieldDefault with Grouped = Centred |> Some } [
-                        select theme values defaultPlayerValue isAdding (PlayerSelected >> dispatch) ]
-                    divVerticalSpace 5
-                ]
-            interaction, contents
-        | PenaltyShootoutEvent (awaySquadId, homeScore, awayScore) ->
-            let interaction = if homeScore <> awayScore then addMatchEventInteraction else NotEnabled None
-            let awaySquad = if awaySquadId |> squadDic.ContainsKey then squadDic.[awaySquadId] |> Some else None
-            let homeSquadName, awaySquadName =
-                match squad, awaySquad with
-                | Some squad, Some awaySquad ->
-                    let (SquadName squadName), (SquadName awaySquadName) = squad.SquadName, awaySquad.SquadName
-                    squadName, awaySquadName
-                | _ -> "Home", "Away" // note: should never happen
-            let warning = [
-                [ strong "Please enter the penalty shootout details" ] |> para theme paraCentredSmaller
-                br
-                [ str "Please note that this action is irreversible." ] |> para theme paraCentredSmallest ]
-            let left =
-                let decrementInteraction = if homeScore > 0u then Clickable ((fun _ -> HomeScoreDecremented |> dispatch), None) else NotEnabled None
-                let incrementInteraction = Clickable ((fun _ -> HomeScoreIncremented |> dispatch), None)
-                let decrement = [ str "-" ] |> button theme { buttonLinkSmall with Interaction = decrementInteraction }
-                let increment = [ str "+" ] |> button theme { buttonLinkSmall with Interaction = incrementInteraction }
-                [
-                    [ strong homeSquadName ] |> para theme paraCentredSmaller
-                    br
-                    div divCentred [
-                        decrement
-                        div { divDefault with PadH = 5 |> Some } [ [ str (sprintf "%i" homeScore) ] |> para theme paraCentredSmaller ]
-                        increment ]
-                ]
-            let right =
-                let decrementInteraction = if awayScore > 0u then Clickable ((fun _ -> AwayScoreDecremented |> dispatch), None) else NotEnabled None
-                let incrementInteraction = Clickable ((fun _ -> AwayScoreIncremented |> dispatch), None)
-                let decrement = [ str "-" ] |> button theme { buttonLinkSmall with Interaction = decrementInteraction }
-                let increment = [ str "+" ] |> button theme { buttonLinkSmall with Interaction = incrementInteraction }
-                [
-                    [ strong awaySquadName ] |> para theme paraCentredSmaller
-                    br
-                    div divCentred [
-                        decrement
-                        div { divDefault with PadH = 5 |> Some } [ [ str (sprintf "%i" awayScore) ] |> para theme paraCentredSmaller ]
-                        increment ]
-                ]
-            let contents =
-                [
-                    notification theme notificationWarning warning
-                    br
-                    columnsLeftAndRight left right
                 ]
             interaction, contents
         | ManOfTheMatchEvent playerId ->
@@ -441,111 +338,107 @@ let private confirmedFixtureDetails (squadDic:SquadDic) fixture =
     match fixture.HomeParticipant, fixture.AwayParticipant, fixture.MatchResult with
     | Confirmed homeSquadId, Confirmed awaySquadId, Some matchResult ->
         let matchOutcome, homeScoreEvents, awayScoreEvents, matchEvents = matchResult.MatchOutcome, matchResult.HomeScoreEvents, matchResult.AwayScoreEvents, matchResult.MatchEvents
-        let winnerSquadId, penaltyShootoutText =
-            match matchOutcome.PenaltyShootoutOutcome with
-            | Some penaltyShootoutOutcome ->
-                if penaltyShootoutOutcome.HomeScore > penaltyShootoutOutcome.AwayScore then
-                    let (SquadName squadName) = homeSquadId |> squadName squadDic
-                    let penaltyShootoutText = sprintf "%s win %i - %i on penalities" squadName penaltyShootoutOutcome.HomeScore penaltyShootoutOutcome.AwayScore
-                    homeSquadId |> Some, penaltyShootoutText |> Some
-                else if penaltyShootoutOutcome.AwayScore > penaltyShootoutOutcome.HomeScore then
-                    let (SquadName squadName) = awaySquadId |> squadName squadDic
-                    let penaltyShootoutText = sprintf "%s win %i - %i on penalities" squadName penaltyShootoutOutcome.AwayScore penaltyShootoutOutcome.HomeScore
-                    awaySquadId |> Some, penaltyShootoutText |> Some
-                else None, None // note: should never happen
-            | None ->
-                if matchOutcome.HomeGoals > matchOutcome.AwayGoals then homeSquadId |> Some, None
-                else if matchOutcome.AwayGoals > matchOutcome.HomeGoals then awaySquadId |> Some, None
-                else None, None
-        let homeIsWinner, homeName, homeGoals =
+        let winnerSquadId =
+            if matchOutcome.HomeScore > matchOutcome.AwayScore then homeSquadId |> Some
+            else if matchOutcome.AwayScore > matchOutcome.HomeScore then awaySquadId |> Some
+            else None
+        let homeIsWinner, homeName, homeScore =
             let (SquadName squadName) = homeSquadId |> squadName squadDic
-            homeSquadId |> Some = winnerSquadId, squadName, matchOutcome.HomeGoals
-        let awayIsWinner, awayName, awayGoals =
+            homeSquadId |> Some = winnerSquadId, squadName, matchOutcome.HomeScore
+        let awayIsWinner, awayName, awayScore =
             let (SquadName squadName) = awaySquadId |> squadName squadDic
-            awaySquadId |> Some = winnerSquadId, squadName, matchOutcome.AwayGoals
+            awaySquadId |> Some = winnerSquadId, squadName, matchOutcome.AwayScore
         let teams = (homeSquadId, homeName, awaySquadId, awayName) |> Some
-        let result = (homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, homeScoreEvents, awayScoreEvents, matchEvents) |> Some
+        let result = (homeIsWinner, homeScore, awayIsWinner, awayScore, homeScoreEvents, awayScoreEvents, matchEvents) |> Some
         teams, result
     | Confirmed homeSquadId, Confirmed awaySquadId, None ->
         let (SquadName homeName), (SquadName awayName) = homeSquadId |> squadName squadDic, awaySquadId |> squadName squadDic
         (homeSquadId, homeName, awaySquadId, awayName) |> Some, None
     | _ -> None, None
 
-let private teamEvents theme fixtureId role forSquadId hasShootout matchEvents canAdministerResults (squadDic:SquadDic) dispatch =
+let private teamEvents theme fixtureId role forSquadId matchEvents canAdministerResults (squadDic:SquadDic) dispatch =
     let isHome = match role with | Home -> true | Away -> false
     let paraEvent = if isHome then { paraDefaultSmallest with ParaAlignment = RightAligned } else paraDefaultSmallest
     matchEvents
     |> List.mapi (fun i (matchEventId, matchEvent) -> i, matchEventId, matchEvent)
     |> List.sortBy (fun (i, _, matchEvent) ->
-        (match matchEvent with | Goal _ | OwnGoal _ | Penalty _ -> 0 | YellowCard _ | RedCard _ -> 1 | CleanSheet _ -> 2 | ManOfTheMatch _ -> 3 | _ -> 4), i)
+        (match matchEvent with | Try _ | Conversion _ -> 0 | PenaltyTry _ -> 1 | PenaltyKick _ -> 2 | DropGoal _ -> 3 | YellowCard _ | RedCard _ -> 4 | ManOfTheMatch _ -> 5), i)
     |> List.choose (fun (_, matchEventId, matchEvent) ->
-        let textAndCanRemove =
+        let eventText =
             match matchEvent with
-            | Goal (squadId, _, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, hasShootout |> not) |> Some
-            | OwnGoal (squadId, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, hasShootout |> not) |> Some
-            | Penalty (squadId, _, Scored) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, hasShootout |> not) |> Some
-            | Penalty (squadId, _, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, true) |> Some
+            | Try (squadId, _) when squadId = forSquadId ->
+                matchEvent |> matchEventText squadDic |> Some
+            | PenaltyTry squadId when squadId = forSquadId ->
+                matchEvent |> matchEventText squadDic |> Some
+            | PenaltyKick (squadId, _, _) when squadId = forSquadId ->
+                matchEvent |> matchEventText squadDic |> Some
+            | Conversion (squadId, _, _) when squadId = forSquadId ->
+                matchEvent |> matchEventText squadDic |> Some
+            | DropGoal (squadId, _) when squadId = forSquadId ->
+                matchEvent |> matchEventText squadDic |> Some
             | YellowCard (squadId, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, true) |> Some
+                matchEvent |> matchEventText squadDic |> Some
             | RedCard (squadId, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, true) |> Some
-            | CleanSheet (squadId, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, true) |> Some
+                matchEvent |> matchEventText squadDic |> Some
             | ManOfTheMatch (squadId, _) when squadId = forSquadId ->
-                (matchEvent |> matchEventText squadDic, true) |> Some
+                matchEvent |> matchEventText squadDic |> Some
             | _ -> None
-        match textAndCanRemove, canAdministerResults with
-        | Some (text, canRemove), true when canRemove ->
+        match eventText, canAdministerResults with
+        | Some text, true ->
             let removeMatchEvent = [ str "Remove" ] |> link theme (Internal (fun _ -> (fixtureId, matchEventId, matchEvent) |> ShowRemoveMatchEventModal |> dispatch))
             if isHome then [ str (sprintf "%s " text) ; removeMatchEvent ] |> para theme paraEvent |> Some
             else [ removeMatchEvent ; str (sprintf " %s" text) ] |> para theme paraEvent |> Some
-        | Some (text, _), _ ->
-            [ str text ] |> para theme paraEvent |> Some
         | _ -> None)
 
-let private addLinks theme fixtureId role forSquadId opponentSquadId opponentGoals hasShootout matchEvents dispatch =
+let private addLinks theme fixtureId role forSquadId matchEvents dispatch =
     let isHome = match role with | Home -> true | Away -> false
-    let hasCleanSheet = matchEvents |> List.exists (fun (_, matchEvent) -> match matchEvent with | CleanSheet (squadId, _) when squadId = forSquadId -> true | _ -> false)
-    let opponentHasCleanSheet = matchEvents |> List.exists (fun (_, matchEvent) -> match matchEvent with | CleanSheet (squadId, _) when squadId <> forSquadId -> true | _ -> false)
+    let nonPenaltyTryCount = matchEvents |> List.filter (fun (_, matchEvent) -> match matchEvent with | Try (squadId, _) when squadId = forSquadId -> true | _ -> false) |> List.length
+    let conversionCount = matchEvents |> List.filter (fun (_, matchEvent) -> match matchEvent with | Conversion (squadId, _, _) when squadId = forSquadId -> true | _ -> false) |> List.length
+    let needsConversion = conversionCount < nonPenaltyTryCount
     let needsManOfTheMatch = matchEvents |> List.exists (fun (_, matchEvent) -> match matchEvent with | ManOfTheMatch _ -> true | _ -> false) |> not
     let paraEvent = if isHome then { paraDefaultSmallest with ParaAlignment = RightAligned } else paraDefaultSmallest
-    let addGoal =
-        if hasShootout |> not && opponentHasCleanSheet |> not then
-            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddGoalModal |> dispatch)
-            [ [ str "Add goal" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+    let addTry =
+        if needsConversion |> not then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddTryModal |> dispatch)
+            [ [ str "Add try" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
         else None
-    let addOwnGoal =
-        if hasShootout |> not && hasCleanSheet |> not then
-            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddOwnGoalModal |> dispatch)
-            [ [ str "Add own goal" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+    let addPenaltyTry =
+        if needsConversion |> not then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddPenaltyTryModal |> dispatch)
+            [ [ str "Add penalty try" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
         else None
-    let addPenalty =
-        let onClick = (fun _ -> (fixtureId, forSquadId, opponentSquadId, opponentHasCleanSheet) |> ShowAddPenaltyModal |> dispatch)
-        let text = if hasShootout || opponentHasCleanSheet then "Add missed/saved penalty" else "Add penalty"
-        [ [ str text ] |> link theme (Internal onClick) ] |> para theme paraEvent
+    let addPenaltyKick =
+        if needsConversion |> not then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddPenaltyKickModal |> dispatch)
+            [ [ str "Add penalty kick" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+        else None
+    let addConversion =
+        if needsConversion then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddConversionModal |> dispatch)
+            [ [ str "Add conversion" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+        else None
+    let addDropGoal =
+        if needsConversion |> not then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddDropGoalModal |> dispatch)
+            [ [ str "Add drop goal" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+        else None
     let addCard =
-        let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddCardModal |> dispatch)
-        [ [ str "Add card" ] |> link theme (Internal onClick) ] |> para theme paraEvent
-    let addCleanSheet =
-        if hasCleanSheet |> not && opponentGoals = 0u then
-            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddCleanSheetModal |> dispatch)
-            [ [ str "Add clean sheet" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
+        if needsConversion |> not then
+            let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddCardModal |> dispatch)
+            [ [ str "Add card" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
         else None
     let addManOfTheMatch =
-        if needsManOfTheMatch then
+        if needsManOfTheMatch && needsConversion |> not then
             let onClick = (fun _ -> (fixtureId, forSquadId) |> ShowAddManOfTheMatchModal |> dispatch)
             [ [ str "Add man-of-the-match" ] |> link theme (Internal onClick) ] |> para theme paraEvent |> Some
         else None
     [
-        yield RctH.ofOption addGoal
-        yield RctH.ofOption addOwnGoal
-        yield addPenalty
-        yield addCard
-        yield RctH.ofOption addCleanSheet
+        yield RctH.ofOption addTry
+        yield RctH.ofOption addPenaltyTry
+        yield RctH.ofOption addPenaltyKick
+        yield RctH.ofOption addConversion
+        yield RctH.ofOption addDropGoal
+        yield RctH.ofOption addCard
         yield RctH.ofOption addManOfTheMatch
     ]
 
@@ -559,45 +452,32 @@ let private renderFixture useDefaultTheme fixtureId (fixtureDic:FixtureDic) (squ
         else None, (None, None)
     match fixture, teams with
     | Some fixture, Some (homeSquadId, homeName, awaySquadId, awayName) ->
-        let homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, _homeScoreEvents, _awayScoreEvents, matchEvents =
+        let homeIsWinner, homeScore, awayIsWinner, awayScore, _homeScoreEvents, _awayScoreEvents, matchEvents =
             match result with
-            | Some (homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, homeScoreEvents, awayScoreEvents, matchEvents) ->
-                homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, homeScoreEvents, awayScoreEvents, matchEvents
+            | Some (homeIsWinner, homeScore, awayIsWinner, awayScore, homeScoreEvents, awayScoreEvents, matchEvents) ->
+                homeIsWinner, homeScore, awayIsWinner, awayScore, homeScoreEvents, awayScoreEvents, matchEvents
             | None ->
                 let emptyScoreEvents = { TeamScoreEvents = [] ; PlayerScoreEvents = [] }
-                false, 0u, false, 0u, None, emptyScoreEvents, emptyScoreEvents, []
-        let hasShootout = match penaltyShootoutText with Some _ -> true | None -> false
+                false, 0u, false, 0u, emptyScoreEvents, emptyScoreEvents, []
         let date, time = fixture.KickOff.LocalDateTime |> dateText, fixture.KickOff.LocalDateTime.ToString ("HH:mm")
         let dateAndTime = sprintf "%s at %s" date time
         let homeOutcome =
-            let homeOutcome = sprintf "%s %i" homeName homeGoals
+            let homeOutcome = sprintf "%s %i" homeName homeScore
             let homeOutcome = if homeIsWinner then strong homeOutcome else str homeOutcome
             [ homeOutcome ] |> para theme { paraDefaultSmall with ParaAlignment = RightAligned }
         let awayOutcome =
-            let awayOutcome = sprintf "%i %s" awayGoals awayName
+            let awayOutcome = sprintf "%i %s" awayScore awayName
             let awayOutcome = if awayIsWinner then strong awayOutcome else str awayOutcome
             [ awayOutcome ] |> para theme paraDefaultSmall
-        let homeEvents = teamEvents theme fixtureId Home homeSquadId hasShootout matchEvents canAdministerResults squadDic dispatch
-        let awayEvents = teamEvents theme fixtureId Away awaySquadId hasShootout matchEvents canAdministerResults squadDic dispatch
-        let homeAddLinks = if canAdministerResults then addLinks theme fixtureId Home homeSquadId awaySquadId awayGoals hasShootout matchEvents dispatch else []
-        let awayAddLinks = if canAdministerResults then addLinks theme fixtureId Away awaySquadId homeSquadId homeGoals hasShootout matchEvents dispatch else []
+        let homeEvents = teamEvents theme fixtureId Home homeSquadId matchEvents canAdministerResults squadDic dispatch
+        let awayEvents = teamEvents theme fixtureId Away awaySquadId matchEvents canAdministerResults squadDic dispatch
+        let homeAddLinks = if canAdministerResults then addLinks theme fixtureId Home homeSquadId matchEvents dispatch else []
+        let awayAddLinks = if canAdministerResults then addLinks theme fixtureId Away awaySquadId matchEvents dispatch else []
         [
             yield [ str (fixture.Stage |> stageText) ] |> para theme paraCentredSmaller
             yield [ str dateAndTime ] |> para theme paraCentredSmallest
             yield divVerticalSpace 10
             yield columnsLeftAndRight [ homeOutcome ] [ awayOutcome ]
-            match penaltyShootoutText with
-            | Some penaltyShootoutText ->
-                yield [ em penaltyShootoutText ] |> para theme paraCentredSmaller
-                yield divVerticalSpace 20
-            | None ->
-                let isKnockout = match fixture.Stage with | Group _ -> false | _ -> true
-                if homeGoals = awayGoals && isKnockout then
-                    let onClick = (fun _ -> (fixtureId, homeSquadId, awaySquadId) |> ShowAddPenaltyShootoutModal |> dispatch)
-                    let addPenaltyShootout = [ str "Add penalty shootout" ] |> link theme (Internal onClick)
-                    yield [ addPenaltyShootout ] |> para theme paraCentredSmallest
-                    yield divVerticalSpace 20
-                else ()
             if homeEvents.Length + awayEvents.Length > 0 then
                 yield columnsLeftAndRight homeEvents awayEvents
             if homeAddLinks.Length + awayAddLinks.Length > 0 then
@@ -668,17 +548,16 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
         match stageText with | Some stageText -> [ str stageText ] |> para theme paraDefaultSmallest |> Some | None -> None
     let details fixture =
         match fixture |> confirmedFixtureDetails squadDic with
-        | Some (_, homeName, _, awayName), Some (homeIsWinner, homeGoals, awayIsWinner, awayGoals, penaltyShootoutText, _, _, _) ->
+        | Some (_, homeName, _, awayName), Some (homeIsWinner, homeScore, awayIsWinner, awayScore, _, _, _) ->
             let home = if homeIsWinner then strong homeName else str homeName
-            let homeGoals = sprintf "%i" homeGoals
-            let homeGoals = if homeIsWinner then strong homeGoals else str homeGoals
-            let homeGoals = [ homeGoals ] |> para theme paraDefaultSmallest |> Some
+            let homeScore = sprintf "%i" homeScore
+            let homeScore = if homeIsWinner then strong homeScore else str homeScore
+            let homeScore = [ homeScore ] |> para theme paraDefaultSmallest |> Some
             let away = if awayIsWinner then strong awayName else str awayName
-            let awayGoals = sprintf "%i" awayGoals
-            let awayGoals = if awayIsWinner then strong awayGoals else str awayGoals
-            let awayGoals = [ awayGoals ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } |> Some
-            let penaltyShootout = match penaltyShootoutText with | Some penaltyShootoutText -> [ em penaltyShootoutText ] |> para theme paraDefaultSmallest |> Some | None -> None
-            home, homeGoals, str "-", away, awayGoals, penaltyShootout
+            let awayScore = sprintf "%i" awayScore
+            let awayScore = if awayIsWinner then strong awayScore else str awayScore
+            let awayScore = [ awayScore ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } |> Some
+            home, homeScore, str "-", away, awayScore
         | _ ->
             let homeParticipant, awayParticipant = fixture.HomeParticipant, fixture.AwayParticipant
             let home =
@@ -693,7 +572,7 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                     let (SquadName squadName) = squadId |> squadName squadDic
                     squadName
                 | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
-            str home, None, str "vs.", str away, None, None
+            str home, None, str "vs.", str away, None
     let extra (fixtureId, fixture) =
         let local = fixture.KickOff.LocalDateTime
         let hasResult = match fixture.HomeParticipant, fixture.AwayParticipant, fixture.MatchResult with | Confirmed _ , Confirmed _, Some _ -> true | _ -> false
@@ -711,7 +590,7 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                 match extra with | Some extra -> [ extra ] |> para theme paraExtra |> Some | None -> None
     let fixtureRow (fixtureId, fixture) =
         let date, time = fixture.KickOff.LocalDateTime |> dateText, fixture.KickOff.LocalDateTime.ToString ("HH:mm")
-        let home, homeGoals, vs, away, awayGoals, penaltyShootout = fixture |> details
+        let home, homeGoals, vs, away, awayGoals = fixture |> details
         tr false [
             td [ [ str date ] |> para theme paraDefaultSmallest ]
             td [ [ str time ] |> para theme paraDefaultSmallest ]
@@ -723,7 +602,6 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
             td [ RctH.ofOption awayGoals ]
             td [ [ away ] |> para theme paraDefaultSmallest ]
             td [ RctH.ofOption (confirmParticipant Away fixture.AwayParticipant fixtureId) ]
-            td [ RctH.ofOption penaltyShootout ]
             td [ RctH.ofOption ((fixtureId, fixture) |> extra) ] ]
     let fixtures =
         fixtureDic
@@ -738,7 +616,6 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                 tr false [
                     th [ [ strong "Date" ] |> para theme paraDefaultSmallest ]
                     th [ [ strong "Time" ] |> para theme paraDefaultSmallest ]
-                    th []
                     th []
                     th []
                     th []

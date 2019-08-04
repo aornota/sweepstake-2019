@@ -1,5 +1,7 @@
 module Aornota.Sweepstake2019.Ui.Program.Markdown.Literals
 
+// TODO-NMB: Confirm scoring system (and update teamScoreEvents|playerScoreEvents in projects\fixtures.fs if necessary)...
+// #region SCORING_SYSTEM_MARKDOWN
 let [<Literal>] SCORING_SYSTEM_MARKDOWN = """### TO BE CONFIRMED...
 
 Each sweepstake team will consist of a **team/coach**, **8 forwards** and **7 backs**.
@@ -40,7 +42,9 @@ The **forwards** and **backs** will score (or lose) points for:
 
 (If penalties or conversions are retaken for any reason, only the outcome of the final attempt will be scored. And again, if a player receives a second yellow card in a match, the two
 yellow cards will be scored as a red card instead; however, if a player receives a yellow card followed by a "straight" red card, both cards will be scored.)"""
+// #endregion
 
+// #region DRAFT_ALGORITHM_MARKDOWN
 let [<Literal>] DRAFT_ALGORITHM_MARKDOWN = """This is not the easiest thing to explain - so let's try a simplified example:
 
 **neph**, **rosie** and **hugh** submit the following selections for the first draft:
@@ -79,13 +83,18 @@ And for the third round, **neph** and **rosie** have uncontested picks (Saki and
 It's not a perfect algorithm by any means. But it's the best I've been able to come up with...
 
 For a more detailed example, here are the [first and second draft details](http://aornota.github.io/sweepstake.2015/draft.html) for the world-famous Rugby World Cup 2015 sweepstake."""
+// #endregion
 
+// TODO-NMB: Confirm payouts once number of sweepstakers has been confirmed...
+// #region PAYOUTS_MARKDOWN
 let [<Literal>] PAYOUTS_MARKDOWN = """**Confirmed payouts**:
 + **TBC** for first place
 + **TBC** for second place
 + **TBC** for third place
 + **TBC** for the [_木製スプーン_](https://translate.google.co.uk/#view=home&op=translate&sl=auto&tl=en&text=%E6%9C%A8%E8%A3%BD%E3%82%B9%E3%83%97%E3%83%BC%E3%83%B3)"""
+// #endregion
 
+// #region MARKDOWN_SYNTAX_MARKDOWN
 let [<Literal>] MARKDOWN_SYNTAX_MARKDOWN = """# Markdown syntax
 ### A very quick introduction
 Text can be:
@@ -125,3 +134,4 @@ And here's a Matt Miles quote [from _Dark Mountain_ issue 11]:
 > human beings, we are our own indicator species.
 ---
 Made possible thanks to [Marked.js](https://marked.js.org/#/README.md) and [Maxime Mangel](https://github.com/MangelMaxime/Fulma/blob/master/docs/src/Libs/Fable.Import.Marked.fs)."""
+// #endregion

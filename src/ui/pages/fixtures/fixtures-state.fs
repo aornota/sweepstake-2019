@@ -126,12 +126,11 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
             match addMatchEvent with
-            | GoalEvent (_, assistedBy) -> (playerId, assistedBy) |> GoalEvent |> Some
-            | OwnGoalEvent _ -> playerId |> OwnGoalEvent |> Some
-            | PenaltyEvent (opponentSquadId, opponentHasCleanSheet, _, penaltyType, savedBy) ->
-                (opponentSquadId, opponentHasCleanSheet, playerId, penaltyType, savedBy) |> PenaltyEvent |> Some
+            | TryEvent _ -> playerId |> TryEvent |> Some
+            | PenaltyKickEvent (_, kickType) -> (playerId, kickType) |> PenaltyKickEvent |> Some
+            | ConversionEvent (_, kickType) -> (playerId, kickType) |> ConversionEvent |> Some
+            | DropGoalEvent _ -> playerId |> DropGoalEvent |> Some
             | CardEvent (_, card) -> (playerId, card) |> CardEvent |> Some
-            | CleanSheetEvent _ -> playerId |> CleanSheetEvent |> Some
             | ManOfTheMatchEvent _ -> playerId |> ManOfTheMatchEvent |> Some
             | _ -> None
         match newAddMatchEvent with
@@ -140,30 +139,12 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
         | None ->
             state, shouldNeverHappenCmd (sprintf "Unexpected PlayerSelected when AddMatchEvent is %A" addMatchEvent), false
-    | OtherPlayerSelected playerIdJson, Some addMatchEventState ->
-        let assistedBy =
-            if playerIdJson |> String.IsNullOrWhiteSpace then None
-            else
-                try playerIdJson |> fromJson<PlayerId> |> Some
-                with _ -> None
+    | KickTypeChanged kickType, Some addMatchEventState ->
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
             match addMatchEvent with
-            | GoalEvent (playerId, _) -> (playerId, assistedBy) |> GoalEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected OtherPlayerSelected when AddMatchEvent is %A" addMatchEvent), false
-    | PenaltyTypeChanged penaltyType, Some addMatchEventState ->
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyEvent (opponentSquadId, opponentHasCleanSheet, playerId, _, savedBy) ->
-                let savedBy = match penaltyType with | PenaltyScored | PenaltyMissed -> None | PenaltySaved -> savedBy
-                (opponentSquadId, opponentHasCleanSheet, playerId, penaltyType |> Some, savedBy) |> PenaltyEvent |> Some
+            | PenaltyKickEvent (playerId, _) -> (playerId, kickType |> Some) |> PenaltyKickEvent |> Some
+            | ConversionEvent (playerId, _) -> (playerId, kickType |> Some) |> ConversionEvent |> Some
             | _ -> None
         match newAddMatchEvent with
         | Some newAddMatchEvent ->
@@ -171,24 +152,6 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
         | None ->
             state, shouldNeverHappenCmd (sprintf "Unexpected PenaltyTypeChanged when AddMatchEvent is %A" addMatchEvent), false
-    | OppositionPlayerSelected playerIdJson, Some addMatchEventState ->
-        let savedBy =
-            if playerIdJson |> String.IsNullOrWhiteSpace then None
-            else
-                try playerIdJson |> fromJson<PlayerId> |> Some
-                with _ -> None
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyEvent (opponentSquadId, opponentHasCleanSheet, playerId, Some PenaltySaved, _) ->
-                (opponentSquadId, opponentHasCleanSheet, playerId, Some PenaltySaved, savedBy) |> PenaltyEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected OppositionPlayerSelected when AddMatchEvent is %A" addMatchEvent), false
     | CardSelected card, Some addMatchEventState ->
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let newAddMatchEvent =
@@ -201,68 +164,20 @@ let private handleAddMatchEventInput addMatchEventInput (fixtureDic:FixtureDic) 
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
         | None ->
             state, shouldNeverHappenCmd (sprintf "Unexpected CardSelected when AddMatchEvent is %A" addMatchEvent), false
-    | HomeScoreDecremented, Some addMatchEventState ->
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyShootoutEvent (awaySquadId, homeScore, awayScore) when homeScore > 0u -> (awaySquadId, homeScore - 1u, awayScore) |> PenaltyShootoutEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected HomeScoreDecremented when AddMatchEvent is %A" addMatchEvent), false
-    | HomeScoreIncremented, Some addMatchEventState ->
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyShootoutEvent (awaySquadId, homeScore, awayScore) -> (awaySquadId, homeScore + 1u, awayScore) |> PenaltyShootoutEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected HomeScoreIncremented when AddMatchEvent is %A" addMatchEvent), false
-    | AwayScoreDecremented, Some addMatchEventState ->
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyShootoutEvent (awaySquadId, homeScore, awayScore) when awayScore > 0u -> (awaySquadId, homeScore, awayScore - 1u) |> PenaltyShootoutEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected AwayScoreDecremented when AddMatchEvent is %A" addMatchEvent), false
-    | AwayScoreIncremented, Some addMatchEventState ->
-        let addMatchEvent = addMatchEventState.AddMatchEvent
-        let newAddMatchEvent =
-            match addMatchEvent with
-            | PenaltyShootoutEvent (awaySquadId, homeScore, awayScore) -> (awaySquadId, homeScore, awayScore + 1u) |> PenaltyShootoutEvent |> Some
-            | _ -> None
-        match newAddMatchEvent with
-        | Some newAddMatchEvent ->
-            let addMatchEventState = { addMatchEventState with AddMatchEvent = newAddMatchEvent }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | None ->
-            state, shouldNeverHappenCmd (sprintf "Unexpected AwayScoreIncremented when AddMatchEvent is %A" addMatchEvent), false
     | AddMatchEvent, Some addMatchEventState ->
         let fixtureId, squadId = addMatchEventState.FixtureId, addMatchEventState.SquadId
         let currentRvn = if fixtureId |> fixtureDic.ContainsKey then fixtureDic.[fixtureId].Rvn else initialRvn
         let addMatchEvent = addMatchEventState.AddMatchEvent
         let matchEvent =
             match addMatchEvent with
-            | GoalEvent (Some playerId, assistedBy) -> (squadId, playerId, assistedBy) |> Goal |> Some
-            | OwnGoalEvent (Some playerId) -> (squadId, playerId) |> OwnGoal |> Some
-            | PenaltyEvent (_, false, Some playerId, Some PenaltyScored, None) -> (squadId, playerId, Scored) |> Penalty |> Some
-            | PenaltyEvent (_, _, Some playerId, Some PenaltyMissed, None) -> (squadId, playerId, Missed) |> Penalty |> Some
-            | PenaltyEvent (opponentSquadId, _, Some playerId, Some PenaltySaved, Some savedBy) -> (squadId, playerId, (opponentSquadId, savedBy) |> Saved) |> Penalty |> Some
+            | TryEvent (Some playerId) -> (squadId, playerId) |> Try |> Some
+            | PenaltyTryEvent -> squadId |> PenaltyTry |> Some
+            | PenaltyKickEvent (Some playerId, Some KickSuccessful) -> (squadId, playerId, Successful) |> PenaltyKick |> Some
+            | PenaltyKickEvent (Some playerId, Some KickMissed) -> (squadId, playerId, Missed) |> PenaltyKick |> Some
+            | ConversionEvent (Some playerId, Some KickSuccessful) -> (squadId, playerId, Successful) |> Conversion |> Some
+            | ConversionEvent (Some playerId, Some KickMissed) -> (squadId, playerId, Missed) |> Conversion |> Some
+            | DropGoalEvent (Some playerId) -> (squadId, playerId) |> DropGoal |> Some
             | CardEvent (Some playerId, Some card) -> match card with | Yellow | SecondYellow -> (squadId, playerId) |> YellowCard |> Some | Red -> (squadId, playerId) |> RedCard |> Some
-            | CleanSheetEvent (Some playerId) -> (squadId, playerId) |> CleanSheet |> Some
-            | PenaltyShootoutEvent (_, homeScore, awayScore) when homeScore <> awayScore -> (homeScore, awayScore) |> PenaltyShootout |> Some
             | ManOfTheMatchEvent (Some playerId) -> (squadId, playerId) |> ManOfTheMatch |> Some
             | _ -> None
         match matchEvent with
@@ -330,29 +245,29 @@ let transition input (fixturesProjection:Projection<_ * FixtureDic>) (squadsProj
             { state with ConfirmParticipantState = confirmParticipantState |> Some }, Cmd.none, true
         | ConfirmParticipantInput confirmParticipantInput, Ready (_, fixtureDic), Ready _ ->
             state |> handleConfirmParticipantInput confirmParticipantInput fixtureDic
-        | ShowAddGoalModal (fixtureId, squadId), Ready _, Ready _ ->
-            let addMatchEvent = (None, None) |> GoalEvent
+        | ShowAddTryModal (fixtureId, squadId), Ready _, Ready _ ->
+            let addMatchEvent = None |> TryEvent
             let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | ShowAddOwnGoalModal (fixtureId, squadId), Ready _, Ready _ ->
-            let addMatchEvent = None |> OwnGoalEvent
+        | ShowAddPenaltyTryModal (fixtureId, squadId), Ready _, Ready _ ->
+            let addMatchEvent = PenaltyTryEvent
             let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | ShowAddPenaltyModal (fixtureId, squadId, opponentSquadId, opponentHasCleanSheet), Ready _, Ready _ ->
-            let addMatchEvent = (opponentSquadId, opponentHasCleanSheet, None, None, None) |> PenaltyEvent
+        | ShowAddPenaltyKickModal (fixtureId, squadId), Ready _, Ready _ ->
+            let addMatchEvent = (None, None) |> PenaltyKickEvent
+            let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
+            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
+        | ShowAddConversionModal (fixtureId, squadId), Ready _, Ready _ ->
+            let addMatchEvent = (None, None) |> ConversionEvent
+            let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
+            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
+        | ShowAddDropGoalModal (fixtureId, squadId), Ready _, Ready _ ->
+            let addMatchEvent = None |> DropGoalEvent
             let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
         | ShowAddCardModal (fixtureId, squadId), Ready _, Ready _ ->
             let addMatchEvent = (None, None) |> CardEvent
             let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | ShowAddCleanSheetModal (fixtureId, squadId), Ready _, Ready _ ->
-            let addMatchEvent = None |> CleanSheetEvent
-            let addMatchEventState = { FixtureId = fixtureId ; SquadId = squadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
-            { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
-        | ShowAddPenaltyShootoutModal (fixtureId, homeSquadId, awaySquadId), Ready _, Ready _ ->
-            let addMatchEvent = (awaySquadId, 0u, 0u) |> PenaltyShootoutEvent
-            let addMatchEventState = { FixtureId = fixtureId ; SquadId = homeSquadId ; AddMatchEvent = addMatchEvent ; AddMatchEventStatus = None }
             { state with AddMatchEventState = addMatchEventState |> Some }, Cmd.none, true
         | ShowAddManOfTheMatchModal (fixtureId, squadId), Ready _, Ready _ ->
             let addMatchEvent = None |> ManOfTheMatchEvent

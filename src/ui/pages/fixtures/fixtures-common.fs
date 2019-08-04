@@ -20,18 +20,12 @@ type ConfirmParticipantInput =
     | ConfirmConfirmParticipant
     | CancelConfirmParticipant
 
-type PenaltyType = | PenaltyScored | PenaltyMissed | PenaltySaved
+type KickType = | KickSuccessful | KickMissed
 
 type AddMatchEventInput =
     | PlayerSelected of playerIdJson : string
-    | OtherPlayerSelected of playerIdJson : string
-    | PenaltyTypeChanged of penaltyType : PenaltyType
-    | OppositionPlayerSelected of playerIdJson : string
+    | KickTypeChanged of kickType : KickType
     | CardSelected of card : Card
-    | HomeScoreDecremented
-    | HomeScoreIncremented
-    | AwayScoreDecremented
-    | AwayScoreIncremented
     | AddMatchEvent
     | CancelAddMatchEvent
 
@@ -49,12 +43,12 @@ type Input =
     | ShowFixture of fixtureId : FixtureId
     | ShowConfirmParticipantModal of fixtureId : FixtureId * role : Role * unconfirmed : Unconfirmed
     | ConfirmParticipantInput of confirmParticipantInput : ConfirmParticipantInput
-    | ShowAddGoalModal of fixtureId : FixtureId * squadId : SquadId
-    | ShowAddOwnGoalModal of fixtureId : FixtureId * squadId : SquadId
-    | ShowAddPenaltyModal of fixtureId : FixtureId * squadId : SquadId * opponentSquadId : SquadId * opponentHasCleanSheet : bool
+    | ShowAddTryModal of fixtureId : FixtureId * squadId : SquadId
+    | ShowAddPenaltyTryModal of fixtureId : FixtureId * squadId : SquadId
+    | ShowAddPenaltyKickModal of fixtureId : FixtureId * squadId : SquadId
+    | ShowAddConversionModal of fixtureId : FixtureId * squadId : SquadId
+    | ShowAddDropGoalModal of fixtureId : FixtureId * squadId : SquadId
     | ShowAddCardModal of fixtureId : FixtureId * squadId : SquadId
-    | ShowAddCleanSheetModal of fixtureId : FixtureId * squadId : SquadId
-    | ShowAddPenaltyShootoutModal of fixtureId : FixtureId * homeSquadId : SquadId * awaySquadId : SquadId
     | ShowAddManOfTheMatchModal of fixtureId : FixtureId * squadId : SquadId
     | AddMatchEventInput of addMatchEventInput : AddMatchEventInput
     | ShowRemoveMatchEventModal of fixtureId : FixtureId * matchEventId : MatchEventId * matchEvent : MatchEvent
@@ -72,12 +66,12 @@ type ConfirmParticipantState = {
     ConfirmParticipantStatus : ConfirmParticipantStatus option }
 
 type AddMatchEvent =
-    | GoalEvent of playerId : PlayerId option * assistedBy : PlayerId option
-    | OwnGoalEvent of playerId : PlayerId option
-    | PenaltyEvent of opponentSquadId : SquadId * opponentHasCleanSheet : bool * playerId : PlayerId option * penaltyType : PenaltyType option * savedBy : PlayerId option
+    | TryEvent of playerId : PlayerId option
+    | PenaltyTryEvent
+    | PenaltyKickEvent of playerId : PlayerId option * kickType : KickType option
+    | ConversionEvent of playerId : PlayerId option * kickType : KickType option
+    | DropGoalEvent of playerId : PlayerId option
     | CardEvent of playerId : PlayerId option * card : Card option
-    | CleanSheetEvent of playerId : PlayerId option
-    | PenaltyShootoutEvent of awaySquadId : SquadId * homeScore : uint32 * awayScore : uint32
     | ManOfTheMatchEvent of playerId : PlayerId option
 
 type AddMatchEventStatus =
@@ -118,34 +112,32 @@ let unconfirmedText unconfirmed =
 
 let matchEventText (squadDic:SquadDic) matchEvent =
     match matchEvent with
-    | Goal (squadId, playerId, Some assistedBy) ->
-        let (PlayerName playerName), (PlayerName assistedByName) = (squadId, playerId) |> playerName squadDic, (squadId, assistedBy) |> playerName squadDic
-        sprintf "Goal scored by %s (assisted by %s)" playerName assistedByName
-    | Goal (squadId, playerId, None) ->
+    | Try (squadId, playerId) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
-        sprintf "Goal scored by %s" playerName
-    | OwnGoal (squadId, playerId) ->
+        sprintf "Try scored by %s" playerName
+    | PenaltyTry _ ->
+        "Penalty try"
+    | PenaltyKick (squadId, playerId, Successful) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
-        sprintf "Own goal scored by %s" playerName
-    | Penalty (squadId, playerId, Scored) ->
-        let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
-        sprintf "Penalty scored by %s" playerName
-    | Penalty (squadId, playerId, Missed) ->
+        sprintf "Penalty kicked by %s" playerName
+    | PenaltyKick (squadId, playerId, Missed) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
         sprintf "Penalty missed by %s" playerName
-    | Penalty (squadId, playerId, Saved (savedBySquadId, savedByPlayerId)) ->
-        let (PlayerName playerName), (PlayerName savedByName) = (squadId, playerId) |> playerName squadDic, (savedBySquadId, savedByPlayerId) |> playerName squadDic
-        sprintf "Penalty missed by %s (saved by %s)" playerName savedByName
+    | Conversion (squadId, playerId, Successful) ->
+        let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
+        sprintf "Conversion kicked by %s" playerName
+    | Conversion (squadId, playerId, Missed) ->
+        let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
+        sprintf "Conversion missed by %s" playerName
+    | DropGoal (squadId, playerId) ->
+        let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
+        sprintf "Drop goal kicked by %s" playerName
     | YellowCard (squadId, playerId) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
         sprintf "Yellow card for %s" playerName
     | RedCard (squadId, playerId) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
         sprintf "Red card for %s" playerName
-    | CleanSheet (squadId, playerId) ->
-        let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
-        sprintf "Clean sheet for %s" playerName
     | ManOfTheMatch (squadId, playerId) ->
         let (PlayerName playerName) = (squadId, playerId) |> playerName squadDic
         sprintf "Man-of-the-match for %s" playerName
-    | PenaltyShootout _ -> "Penalty shootout"
