@@ -369,7 +369,6 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
         let pickedByHeader = if unpickedOnly |> not then [ strong "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
         match squadRows with
         | _ :: _ ->
-            yield br
             yield table theme false { tableDefault with IsNarrow = true} [
                 thead [
                     tr false [
@@ -380,7 +379,7 @@ let private renderBestTeams (useDefaultTheme, unpickedOnly, squadDic:SquadDic, u
                         th [ RctH.ofOption pickedByHeader ]
                         th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
                 tbody [ yield! squadRows ] ]
-        | [] -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
+        | [] -> yield [ str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
     ]
 
 let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadDic:SquadDic, userDic:UserDic, fixtureDic:FixtureDic, authUser) =
@@ -424,7 +423,6 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
         let pickedByHeader = if unpickedOnly |> not then [ strong "Picked by" ] |> para theme paraDefaultSmallest |> Some else None
         match playerRows with
         | _ :: _ ->
-            yield br
             yield table theme false { tableDefault with IsNarrow = true } [
                 thead [
                     tr false [
@@ -436,7 +434,7 @@ let private renderBestPlayers (useDefaultTheme, playerType, unpickedOnly, squadD
                         th [ RctH.ofOption pickedByHeader ]
                         th [ [ strong "Score" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] ] ]
                 tbody [ yield! playerRows ] ]
-        | [] -> yield [ br ; str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
+        | [] -> yield [ str "Coming soon" ] |> para theme paraCentredSmaller // note: should never happen
     ]
 
 let private renderBest (useDefaultTheme, best, unpickedOnly, squadDic, userDic, fixtureDic, authUser) =
@@ -444,7 +442,7 @@ let private renderBest (useDefaultTheme, best, unpickedOnly, squadDic, userDic, 
     | Teams -> renderBestTeams (useDefaultTheme, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
     | Players -> renderBestPlayers (useDefaultTheme, None, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
     | Forwards -> renderBestPlayers (useDefaultTheme, Forward |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
-    | Backs -> renderBestPlayers (useDefaultTheme, Forward |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
+    | Backs -> renderBestPlayers (useDefaultTheme, Back |> Some, unpickedOnly, squadDic, userDic, fixtureDic, authUser)
 
 let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Projection<_ * UserDic>, squadsProjection:Projection<_ * SquadDic>, fixturesProjection:Projection<_ * FixtureDic>) dispatch =
     let theme = getTheme useDefaultTheme
@@ -504,9 +502,11 @@ let render (useDefaultTheme, state, authUser:AuthUser option, usersProjection:Pr
                 let best = match best with | Some best -> best | None -> Teams
                 let bestTabs = bestTabs best (ShowBest >> dispatch)
                 yield div divCentred [ tabs theme { tabsDefault with Tabs = bestTabs } ]
+                yield br
                 yield lazyViewOrHMR renderBest (useDefaultTheme, best, false, squadDic, userDic, fixtureDic, authUser)
             | BestUnpicked best ->
                 let best = match best with | Some best -> best | None -> Teams
                 let bestTabs = bestTabs best (ShowBestUnpicked >> dispatch)
                 yield div divCentred [ tabs theme { tabsDefault with Tabs = bestTabs } ]
+                yield br
                 yield lazyViewOrHMR renderBest (useDefaultTheme, best, true, squadDic, userDic, fixtureDic, authUser) ]
