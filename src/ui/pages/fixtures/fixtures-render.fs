@@ -358,36 +358,40 @@ let private confirmedFixtureDetails (squadDic:SquadDic) fixture =
 
 let private teamEvents theme fixtureId role forSquadId matchEvents canAdministerResults (squadDic:SquadDic) dispatch =
     let isHome = match role with | Home -> true | Away -> false
+    let nonPenaltyTryCount = matchEvents |> List.filter (fun (_, matchEvent) -> match matchEvent with | Try (squadId, _) when squadId = forSquadId -> true | _ -> false) |> List.length
+    let conversionCount = matchEvents |> List.filter (fun (_, matchEvent) -> match matchEvent with | Conversion (squadId, _, _) when squadId = forSquadId -> true | _ -> false) |> List.length
     let paraEvent = if isHome then { paraDefaultSmallest with ParaAlignment = RightAligned } else paraDefaultSmallest
     matchEvents
     |> List.mapi (fun i (matchEventId, matchEvent) -> i, matchEventId, matchEvent)
     |> List.sortBy (fun (i, _, matchEvent) ->
         (match matchEvent with | Try _ | Conversion _ -> 0 | PenaltyTry _ -> 1 | PenaltyKick _ -> 2 | DropGoal _ -> 3 | YellowCard _ | RedCard _ -> 4 | ManOfTheMatch _ -> 5), i)
     |> List.choose (fun (_, matchEventId, matchEvent) ->
-        let eventText =
+        let textAndCanRemove  =
             match matchEvent with
             | Try (squadId, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, nonPenaltyTryCount <> conversionCount) |> Some
             | PenaltyTry squadId when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | PenaltyKick (squadId, _, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | Conversion (squadId, _, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | DropGoal (squadId, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | YellowCard (squadId, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | RedCard (squadId, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | ManOfTheMatch (squadId, _) when squadId = forSquadId ->
-                matchEvent |> matchEventText squadDic |> Some
+                (matchEvent |> matchEventText squadDic, true) |> Some
             | _ -> None
-        match eventText, canAdministerResults with
-        | Some text, true ->
+        match textAndCanRemove, canAdministerResults with
+        | Some (text, canRemove), true when canRemove ->
             let removeMatchEvent = [ str "Remove" ] |> link theme (Internal (fun _ -> (fixtureId, matchEventId, matchEvent) |> ShowRemoveMatchEventModal |> dispatch))
             if isHome then [ str (sprintf "%s " text) ; removeMatchEvent ] |> para theme paraEvent |> Some
             else [ removeMatchEvent ; str (sprintf " %s" text) ] |> para theme paraEvent |> Some
+        | Some (text, _), _ ->
+            [ str text ] |> para theme paraEvent |> Some
         | _ -> None)
 
 let private addLinks theme fixtureId role forSquadId matchEvents dispatch =
