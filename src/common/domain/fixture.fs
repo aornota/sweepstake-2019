@@ -29,47 +29,43 @@ type Participant =
 
 type MatchEventId = | MatchEventId of guid : Guid with static member Create () = Guid.NewGuid () |> MatchEventId
 
-// TODO-NMB: KickOutcome?...
-type PenaltyOutcome =
-    | Scored
+type KickOutcome =
+    | Successful
     | Missed
-    | Saved of savedBy : SquadId * PlayerId
 
-// TODO-NMB: Rework...
 type MatchEvent =
-    | Goal of squadId : SquadId * playerId : PlayerId * assistedBy : PlayerId option
-    | OwnGoal of squadId : SquadId * playerId : PlayerId
-    | Penalty of squadId : SquadId * playerId : PlayerId * penaltyOutcome : PenaltyOutcome
+    | Try of squadId : SquadId * playerId : PlayerId
+    | PenaltyTry of squadId : SquadId
+    | PenaltyKick of squadId : SquadId * playerId : PlayerId * kickOutcome : KickOutcome
+    | Conversion of squadId : SquadId * playerId : PlayerId * kickOutcome : KickOutcome
+    | DropGoal of squadId : SquadId * playerId : PlayerId
     | YellowCard of squadId : SquadId * playerId : PlayerId
     | RedCard of squadId : SquadId * playerId : PlayerId
-    | CleanSheet of squadId : SquadId * playerId : PlayerId // note: not currently catering for "shared" clean sheet points
-    | PenaltyShootout of homeScore : uint32 * awayScore : uint32
     | ManOfTheMatch of squadId : SquadId * playerId : PlayerId
 
-type PenaltyShootoutOutcome = { HomeScore : uint32 ; AwayScore : uint32 }
-type MatchOutcome = { HomeGoals : uint32 ; AwayGoals : uint32 ; PenaltyShootoutOutcome : PenaltyShootoutOutcome option }
+type MatchOutcome = { HomeScore : uint32 ; AwayScore : uint32 ; HomeTotalTries : uint32 ; AwayTotalTries : uint32 ; HomePenaltyTries : uint32 ; AwayPenaltyTries : uint32 }
 
 type Card =
     | Yellow
     | SecondYellow
     | Red
 
-// TODO-NMB: BonusPoint/s?...
 type TeamScoreEvent =
     | MatchWon
     | MatchDrawn
+    | TriesBonusPoint
+    | LosingBonusPoint
+    | PenaltyTryScored
     | PlayerCard of playerId : PlayerId * card : Card
 
-// TODO-NMB: Rework...
 type PlayerScoreEvent =
-    | GoalScored
-    | GoalAssisted
-    | OwnGoalScored
-    | PenaltyScored
-    | PenaltyMissed
+    | TryScored
+    | PenaltyKickSuccessful
+    | PenaltyKickMissed
+    | ConversionSuccessful
+    | ConversionMissed
+    | DropGoalSuccessful
     | Card of card : Card
-    | PenaltySaved
-    | CleanSheetKept
     | ManOfTheMatchAwarded
 
 type ScoreEvents = { TeamScoreEvents : (TeamScoreEvent * int<point>) list ; PlayerScoreEvents : (PlayerId * (PlayerScoreEvent * int<point>) list) list }

@@ -1,6 +1,6 @@
 {
     "name": "sweepstake-2019",
-    "version": "α",
+    "version": "β",
     "description": "The world-famous Rugby World Cup sweepstake. https://sweepstake-2019.azurewebsites.net/",
     "repository": "git@github.com:aornota/sweepstake-2019.git",
     "author": "dj narration",

@@ -205,4 +205,4 @@ type State = {
     ConnectionState : ConnectionState
     AppState : AppState }
 
-let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2019 (α)"
+let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2019 (β)"
