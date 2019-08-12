@@ -268,7 +268,7 @@ let private createInitialSquadsEventsIfNecessary = async {
         // #endregion
         // #region: Group C - England | France | Argentina | United States | Tonga
         let england = SquadName "England"
-        let! result = nephTokens.CreateSquadToken |> ifToken (fun token -> (token, nephId, englandId, england, GroupC, Some (Seeding 2), CoachName "TODO-NMB...England coach") |> squads.HandleCreateSquadCmdAsync)
+        let! result = nephTokens.CreateSquadToken |> ifToken (fun token -> (token, nephId, englandId, england, GroupC, Some (Seeding 2), CoachName "Eddie Jones") |> squads.HandleCreateSquadCmdAsync)
         result |> logShouldSucceed (sprintf "HandleCreateSquadCmdAsync (%A)" england)
         let france = SquadName "France"
         let! result = nephTokens.CreateSquadToken |> ifToken (fun token -> (token, nephId, franceId, france, GroupC, Some (Seeding 6), CoachName "TODO-NMB...France coach") |> squads.HandleCreateSquadCmdAsync)

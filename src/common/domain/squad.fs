@@ -29,8 +29,7 @@ type SquadOnlyDto = { SquadId : SquadId ; Rvn : Rvn ; SquadName : SquadName ; Gr
 
 type SquadDto = { SquadOnlyDto : SquadOnlyDto ; PlayerDtos : PlayerDto list }
 
-// TODO-NMB: Confirm what this should be...
-let [<Literal>] MAX_PLAYERS_PER_SQUAD = 23
+let [<Literal>] MAX_PLAYERS_PER_SQUAD = 31
 
 let squadIsFullText = sprintf "Squad contains the maximum of %i non-withdrawn players" MAX_PLAYERS_PER_SQUAD
 
