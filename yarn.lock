@@ -2248,10 +2248,10 @@ fable-babel-plugins@^2.2.0:
   resolved "https://registry.yarnpkg.com/fable-babel-plugins/-/fable-babel-plugins-2.2.0.tgz#2c61be1bd1afb1f03da4e66ccaa1bfecf92063a3"
   integrity sha512-4g8CIyXCILk5LLiwNPtvtrPy3YuV5eJV18SYJCZxu3A1BSKNvPGHLSg5YcFJ2zt4qmBvSkBewlQ2bVQYG+TnrQ==
 
-fable-compiler@^2.3.18:
-  version "2.3.18"
-  resolved "https://registry.yarnpkg.com/fable-compiler/-/fable-compiler-2.3.18.tgz#99ce1fd60be15193f6205e90f0087e3f222fa346"
-  integrity sha512-wibbsLJ+oMO7stRz86nFSMF8HvDyTcAHwrjjLhsDrqc7/w5yKEnxQJ20zYX1PM/u4U9aRquOZgraftl9cRhURg==
+fable-compiler@^2.3.19:
+  version "2.3.19"
+  resolved "https://registry.yarnpkg.com/fable-compiler/-/fable-compiler-2.3.19.tgz#4b5c7b79ddd6635937502e5a0220724198336dbb"
+  integrity sha512-ZRdbQt0d5MGkC4c3Yzc9vjkJlddboAugcqFam7lBHKHgPOo81rkE4/5OawANTNyUFyF1VX+HvHX4H6ODk+h/fw==
 
 fable-loader@^2.1.8:
   version "2.1.8"
@@ -5489,10 +5489,10 @@ webpack-sources@^1.4.0, webpack-sources@^1.4.1:
     source-list-map "^2.0.0"
     source-map "~0.6.1"
 
-webpack@^4.39.1:
-  version "4.39.1"
-  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.39.1.tgz#60ed9fb2b72cd60f26ea526c404d2a4cc97a1bd8"
-  integrity sha512-/LAb2TJ2z+eVwisldp3dqTEoNhzp/TLCZlmZm3GGGAlnfIWDgOEE758j/9atklNLfRyhKbZTCOIoPqLJXeBLbQ==
+webpack@^4.39.2:
+  version "4.39.2"
+  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.39.2.tgz#c9aa5c1776d7c309d1b3911764f0288c8c2816aa"
+  integrity sha512-AKgTfz3xPSsEibH00JfZ9sHXGUwIQ6eZ9tLN8+VLzachk1Cw2LVmy+4R7ZiwTa9cZZ15tzySjeMui/UnSCAZhA==
   dependencies:
     "@webassemblyjs/ast" "1.8.5"
     "@webassemblyjs/helper-module-context" "1.8.5"
