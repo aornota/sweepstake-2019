@@ -37,7 +37,8 @@ type private MatchEventDic = Dictionary<MatchEventId, MatchEvent>
 type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchEventDic : MatchEventDic }
 type private FixtureDic = Dictionary<FixtureId, Fixture>
 
-type private SquadDic = Dictionary<SquadId, Seeding option>
+type private PlayerDic = Dictionary<PlayerId, PlayerType>
+type private SquadDic = Dictionary<SquadId, Seeding option * PlayerDic>
 
 type private Projectee = { LastRvn : Rvn }
 type private ProjecteeDic = Dictionary<ConnectionId, Projectee>
@@ -110,60 +111,65 @@ let private cards (matchEventDic:MatchEventDic) =
             pair, cards)
 
 let private teamScoreEvents fixture role forSquadId againstSquadId (cards:((SquadId * PlayerId) * Card list) list) matchOutcome (squadDic:SquadDic) =
-    let seeding squadId = if squadId |> squadDic.ContainsKey then squadDic.[squadId] |> Some else None
-    match forSquadId |> seeding, againstSquadId |> seeding with
-    | Some forSeeding, Some againstSeeding ->
-        let isTop8 seeding = match seeding with | Some seeding -> seeding <= Seeding 8 | None -> false
-        let matchResult =
-            if matchOutcome.HomeScore > matchOutcome.AwayScore then HomeWin, matchOutcome.HomeScore - matchOutcome.AwayScore
-            else if matchOutcome.HomeScore < matchOutcome.AwayScore then AwayWin, matchOutcome.AwayScore - matchOutcome.HomeScore
-            else Draw, 0u
-        let forIsTop8, againstIsTop8 = forSeeding |> isTop8, againstSeeding |> isTop8
-        let matchResultEvent =
-            match role, matchResult with
-            | Home, (HomeWin, _) | Away, (AwayWin, _) -> [ MatchWon, match forIsTop8, againstIsTop8 with | true, false -> 6<point> | false, true -> 10<point> | _ -> 8<point> ]
-            | _, (Draw, _) ->
-                match fixture.Stage with
-                | Group _ -> [ MatchDrawn, match forIsTop8, againstIsTop8 with | true, false -> 3<point> | false, true -> 5<point> | _ -> 4<point> ]
-                | _ -> [] // note: no draws for knockout matches
-            | Home, (AwayWin, margin) | Away, (HomeWin, margin) ->
-                if margin <= 7u then [ LosingBonusPoint, match forIsTop8, againstIsTop8 with | true, false -> 1<point> | false, true -> 3<point> | _ -> 2<point> ]
-                else []
-        let triesBonusPointEvent =
-            let hasBonus =
-                match role, matchOutcome.HomeTotalTries, matchOutcome.AwayTotalTries with
-                | Home, homeTotalTries, _ when homeTotalTries >= 4u -> true
-                | Away, _, awayTotalTries when awayTotalTries >= 4u -> true
-                | _ -> false
-            if hasBonus then [ TriesBonusPoint, match forIsTop8, againstIsTop8 with | true, false -> 1<point> | false, true -> 3<point> | _ -> 2<point> ]
+    let isTop8 squadId = if squadId |> squadDic.ContainsKey then match squadDic.[squadId] |> fst with | Some seeding -> seeding <= Seeding 8 | None -> false else false
+    let forIsTop8, againstIsTop8 = forSquadId |> isTop8, forSquadId |> isTop8
+    let matchResult =
+        if matchOutcome.HomeScore > matchOutcome.AwayScore then HomeWin, matchOutcome.HomeScore - matchOutcome.AwayScore
+        else if matchOutcome.HomeScore < matchOutcome.AwayScore then AwayWin, matchOutcome.AwayScore - matchOutcome.HomeScore
+        else Draw, 0u
+    let matchResultEvent =
+        match role, matchResult with
+        | Home, (HomeWin, _) | Away, (AwayWin, _) -> [ MatchWon, match forIsTop8, againstIsTop8 with | true, false -> 8<point> | false, true -> 12<point> | _ -> 10<point> ]
+        | _, (Draw, _) ->
+            match fixture.Stage with
+            | Group _ -> [ MatchDrawn, match forIsTop8, againstIsTop8 with | true, false -> 4<point> | false, true -> 6<point> | _ -> 5<point> ]
+            | _ -> [] // note: no draws for knockout matches
+        | Home, (AwayWin, margin) | Away, (HomeWin, margin) ->
+            if margin <= 7u then [ LosingBonusPoint, match forIsTop8, againstIsTop8 with | true, false -> 2<point> | false, true -> 4<point> | _ -> 3<point> ]
             else []
-        let penaltyTryEvents =
-            let penaltyTries = match role with | Home -> matchOutcome.HomePenaltyTries | Away -> matchOutcome.AwayPenaltyTries
-            if penaltyTries > 0u then [ for _ in 1u..penaltyTries do yield PenaltyTryScored, 6<point> ]
-            else []
-        let cardEvents =
-            cards |> List.collect (fun ((squadId, playerId), cards) ->
-                if squadId = forSquadId then
-                    cards |> List.map (fun card ->
-                        match card with
-                        | Yellow -> (playerId, Yellow) |> PlayerCard, -2<point>
-                        | SecondYellow -> (playerId, SecondYellow) |> PlayerCard, -2<point>
-                        | Red -> (playerId, Red) |> PlayerCard, -4<point>)
-                else [])
-        matchResultEvent @ triesBonusPointEvent @ penaltyTryEvents @ cardEvents
-    | _ -> [] // note: should never happen
+    let triesBonusPointEvent =
+        let hasBonus =
+            match role, matchOutcome.HomeTotalTries, matchOutcome.AwayTotalTries with
+            | Home, homeTotalTries, _ when homeTotalTries >= 4u -> true
+            | Away, _, awayTotalTries when awayTotalTries >= 4u -> true
+            | _ -> false
+        if hasBonus then [ TriesBonusPoint, match forIsTop8, againstIsTop8 with | true, false -> 2<point> | false, true -> 4<point> | _ -> 3<point> ]
+        else []
+    let penaltyTryEvents =
+        let penaltyTries = match role with | Home -> matchOutcome.HomePenaltyTries | Away -> matchOutcome.AwayPenaltyTries
+        if penaltyTries > 0u then [ for _ in 1u..penaltyTries do yield PenaltyTryScored, 6<point> ]
+        else []
+    let cardEvents =
+        cards |> List.collect (fun ((squadId, playerId), cards) ->
+            if squadId = forSquadId then
+                cards |> List.map (fun card ->
+                    match card with
+                    | Yellow -> (playerId, Yellow) |> PlayerCard, -2<point>
+                    | SecondYellow -> (playerId, SecondYellow) |> PlayerCard, -2<point>
+                    | Red -> (playerId, Red) |> PlayerCard, -4<point>)
+            else [])
+    matchResultEvent @ triesBonusPointEvent @ penaltyTryEvents @ cardEvents
 
-let private playerScoreEvents forSquadId (cards:((SquadId * PlayerId) * Card list) list) (matchEventDic:MatchEventDic) =
+let private playerScoreEvents forSquadId (cards:((SquadId * PlayerId) * Card list) list) (squadDic:SquadDic) (matchEventDic:MatchEventDic) =
+    let playerType playerId =
+        if forSquadId |> squadDic.ContainsKey then
+            let playerDic = squadDic.[forSquadId] |> snd
+            if playerId |> playerDic.ContainsKey then playerDic.[playerId] |> Some else None
+        else None
     let nonCardEvents =
         matchEventDic |> List.ofSeq |> List.collect (fun (KeyValue (_, matchEvent)) ->
             match matchEvent with
-            | Try (squadId, playerId) when squadId = forSquadId -> [ playerId, (TryScored, 9<point>) ]
+            | Try (squadId, playerId) when squadId = forSquadId ->
+                let points = match playerType playerId with | Some Forward -> 12<point> | Some Back | None -> 9<point>
+                [ playerId, (TryScored, points) ]
             | PenaltyKick (squadId, playerId, Successful) when squadId = forSquadId -> [ playerId, (PenaltyKickSuccessful, 3<point>) ]
             | PenaltyKick (squadId, playerId, Missed) when squadId = forSquadId -> [ playerId, (PenaltyKickMissed, -2<point>) ]
             | Conversion (squadId, playerId, Successful) when squadId = forSquadId -> [ playerId, (ConversionSuccessful, 2<point>) ]
             | Conversion (squadId, playerId, Missed) when squadId = forSquadId -> [ playerId, (ConversionMissed, -1<point>) ]
             | DropGoal (squadId, playerId) when squadId = forSquadId -> [ playerId, (DropGoalSuccessful, 3<point>) ]
-            | ManOfTheMatch (squadId, playerId) when squadId = forSquadId -> [ playerId, (ManOfTheMatchAwarded, 10<point>) ]
+            | ManOfTheMatch (squadId, playerId) when squadId = forSquadId ->
+                let points = match playerType playerId with | Some Forward -> 13<point> | Some Back | None -> 10<point>
+                [ playerId, (ManOfTheMatchAwarded, points) ]
             | _ -> [])
     let cardEvents =
         cards |> List.collect (fun ((squadId, playerId), cards) ->
@@ -185,9 +191,9 @@ let private fixtureDto (squadDic:SquadDic) (fixtureId, fixture:Fixture) : Fixtur
             let matchEventDic = fixture.MatchEventDic
             let cards = matchEventDic |> cards
             let homeTeamScoreEvents = teamScoreEvents fixture Home homeSquadId awaySquadId cards matchOutcome squadDic
-            let homePlayerScoreEvents = playerScoreEvents homeSquadId cards matchEventDic
+            let homePlayerScoreEvents = playerScoreEvents homeSquadId cards squadDic matchEventDic
             let awayTeamScoreEvents = teamScoreEvents fixture Away awaySquadId homeSquadId cards matchOutcome squadDic
-            let awayPlayerScoreEvents = playerScoreEvents awaySquadId cards matchEventDic
+            let awayPlayerScoreEvents = playerScoreEvents awaySquadId cards squadDic matchEventDic
             let homeScoreEvents = { TeamScoreEvents = homeTeamScoreEvents ; PlayerScoreEvents = homePlayerScoreEvents }
             let awayScoreEvents = { TeamScoreEvents = awayTeamScoreEvents ; PlayerScoreEvents = awayPlayerScoreEvents }
             let matchEvents = matchEventDic |> List.ofSeq |> List.map (fun (KeyValue (matchEventId, matchEvent)) -> matchEventId, matchEvent)
@@ -250,7 +256,10 @@ let private ifAllRead source (fixturesRead:(FixtureRead list) option, squadsRead
                             KickOff = fixtureRead.KickOff ; MatchEventDic = matchEventDic }
             (fixtureRead.FixtureId, fixture) |> fixtureDic.Add)
         let squadDic = SquadDic ()
-        squadsRead |> List.iter (fun squadRead -> if squadRead.SquadId |> squadDic.ContainsKey |> not then (squadRead.SquadId, squadRead.Seeding) |> squadDic.Add)
+        squadsRead |> List.iter (fun squadRead ->
+            let playerDic = PlayerDic ()
+            squadRead.PlayersRead |> List.iter (fun playerRead -> (playerRead.PlayerId, playerRead.PlayerType) |> playerDic.Add)
+            if squadRead.SquadId |> squadDic.ContainsKey |> not then (squadRead.SquadId, (squadRead.Seeding, playerDic)) |> squadDic.Add)
         let projecteeDic = ProjecteeDic ()
         let state = (fixtureDic, squadDic) |> Initialization |> updateState source projecteeDic
         (state, fixtureDic, projecteeDic) |> Some

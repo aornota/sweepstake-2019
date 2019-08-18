@@ -1,15 +1,25 @@
 module Aornota.Sweepstake2019.Ui.Program.Markdown.Literals
 
-// TODO-NMB: Confirm scoring system (and update teamScoreEvents|playerScoreEvents in projects\fixtures.fs if necessary)...
 // #region SCORING_SYSTEM_MARKDOWN
-let [<Literal>] SCORING_SYSTEM_MARKDOWN = """### TO BE CONFIRMED...
+let [<Literal>] SCORING_SYSTEM_MARKDOWN = """##### **Please note:**
+
+The scoring system is slightly different from [that used](http://aornota.github.io/sweepstake.2015/scoring.html) for the world-famous Rugby World Cup 2015 sweepstake:
++ **team/coach** points - for **winning** or **drawing** matches; and per **bonus point** earned - are a little higher
++ **player** points - for being named **man-of-the-match**; and for scoring a **try** - are now higher for **forwards** than for **backs**
+
+(There are no changes to points relating to penalty kicks, conversions or drop goals as I can only recall two instances of forwards attempting these: a
+[piss-poor effort](https://www.youtube.com/watch?v=XH-aV_36WVM) from Sergio Parisse; and a [comedy conversion](https://www.youtube.com/watch?v=x5b0yMxQ088) from Johnny Redelinghuys.)
+
+These changes are intended to address the [dominance of backs](http://aornota.github.io/sweepstake.2015/index.html#Top%20teams/coaches) in the "top scorer" charts last time.
+
+##### **Scoring system:**
 
 Each sweepstake team will consist of a **team/coach**, **8 forwards** and **7 backs**.
 
 The **team/coach** will score (or lose) points for:
-+ **winning** a match: _**10**_ or _**8**_ or _**6**_ (see below)
-+ **drawing** a match: _**5**_ or _**4**_ or _**3**_ (see below)
-+ per **bonus point** earned: _**3**_ or _**2**_ or _**1**_ (see below)
++ **winning** a match: _**12**_ or _**10**_ or _**8**_ (see below)
++ **drawing** a match: _**6**_ or _**5**_ or _**4**_ (see below)
++ per **bonus point** earned: _**4**_ or _**3**_ or _**2**_ (see below)
 + the team scoring a **penalty try**: _**6**_
 + a team player receiving a **yellow card**: _**-2**_
 + a team player receiving a **red card**: _**-4**_
@@ -31,8 +41,8 @@ The team can earn _up to two_ bonus points (weighted as outlined above) for:
 + losing by 7 points or fewer
 
 The **forwards** and **backs** will score (or lose) points for:
-+ being named **man-of-the-match**: _**10**_
-+ scoring a **try**: _**9**_
++ being named **man-of-the-match**: _**13**_ for **forwards** and _**10**_ for **backs**
++ scoring a **try**: _**12**_ for **forwards** and _**9**_ for **backs**
 + kicking a **drop goal** or **penalty**: _**3**_
 + kicking a **conversion**: _**2**_
 + _missing_ a **conversion**: _**-1**_
@@ -87,7 +97,7 @@ For a more detailed example, here are the [first and second draft details](http:
 
 // TODO-NMB: Confirm payouts once number of sweepstakers has been confirmed...
 // #region PAYOUTS_MARKDOWN
-let [<Literal>] PAYOUTS_MARKDOWN = """**Confirmed payouts**:
+let [<Literal>] PAYOUTS_MARKDOWN = """##### **Payouts:**
 + **TBC** for first place
 + **TBC** for second place
 + **TBC** for third place
