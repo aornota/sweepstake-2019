@@ -158,9 +158,6 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                         playerPoints)
                     |> List.sum
                 let points = teamPoints + playerPoints
-                // TEMP-NMB...
-                let points = (Random()).Next(0, 21) * 1<point>
-                // ...NMB-TEMP
                 let players = players |> List.map (fun (squadId, _, playerId, player, _, _) -> squadId, playerId, player)
                 userId, userName, squad, players, points)
             |> List.sortBy (fun (_, userName, _, _, points) -> -points, userName)
