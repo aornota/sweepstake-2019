@@ -25,16 +25,15 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
         let userRow userCount (rank, tieCount, rankChange, userId, UserName userName, squad, players, points, pointsChange) =
             let payout =
                 let paraPayout = { paraDefaultSmallest with ParaAlignment = RightAligned }
-                // TODO-NMB: Update payout calculation once number of sweepstakers has been confirmed...
                 let payout =
                     match rank, tieCount with
-                    | 1, 1 -> 65. |> Some
-                    | 1, 2 -> 50. |> Some
-                    | 1, 3 -> 40. |> Some
-                    | 1, 4 -> 30. |> Some
+                    | 1, 1 -> 50. |> Some
+                    | 1, 2 -> 40. |> Some
+                    | 1, 3 -> 33.33 |> Some
+                    | 1, 4 -> 25. |> Some
                     | 1, _ -> None // note: unlikely to happen
-                    | 2, 1 -> 35. |> Some
-                    | 2, 2 -> 27.5 |> Some
+                    | 2, 1 -> 30. |> Some
+                    | 2, 2 -> 25. |> Some
                     | 2, _ -> None // note: unlikely to happen
                     | 3, 1 -> 20. |> Some
                     | 3, 2 -> 10. |> Some
@@ -159,6 +158,9 @@ let private renderStandings (useDefaultTheme, users:(UserId * UserName) list, sq
                         playerPoints)
                     |> List.sum
                 let points = teamPoints + playerPoints
+                // TEMP-NMB...
+                let points = (Random()).Next(0, 21) * 1<point>
+                // ...NMB-TEMP
                 let players = players |> List.map (fun (squadId, _, playerId, player, _, _) -> squadId, playerId, player)
                 userId, userName, squad, players, points)
             |> List.sortBy (fun (_, userName, _, _, points) -> -points, userName)
