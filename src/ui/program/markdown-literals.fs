@@ -97,7 +97,7 @@ For a more detailed example, here are the [first and second draft details](http:
 
 // #region PAYOUTS_MARKDOWN
 let [<Literal>] PAYOUTS_MARKDOWN = """##### **Payouts:**
-+ **£50** for first place
++ **£60** for first place
 + **£30** for second place
 + **£20** for third place
 + **£10** for the [_木製スプーン_](https://translate.google.co.uk/#view=home&op=translate&sl=auto&tl=en&text=%E6%9C%A8%E8%A3%BD%E3%82%B9%E3%83%97%E3%83%BC%E3%83%B3)"""
