@@ -95,16 +95,17 @@ let private renderConfirmParticipantModal (useDefaultTheme, fixtureDic:FixtureDi
             [ str "Confirm participant" ] |> button theme { buttonLinkSmall with Interaction = confirmInteraction } ] ]
     cardModal theme (Some(title, onDismiss)) body
 
-let private possiblePlayers (squadDic:SquadDic) forSquadId =
+let private possiblePlayers (squadDic:SquadDic) backsFirst forSquadId =
     if forSquadId |> squadDic.ContainsKey then
         let squad = squadDic.[forSquadId]
+        let forwardOrder, backOrder = if backsFirst then 2, 1 else 1, 2
         squad.PlayerDic |> List.ofSeq |> List.choose (fun (KeyValue (playerId, player)) ->
             match player.PlayerStatus with
             | Active _ ->
                 let (PlayerName playerName) = player.PlayerName
                 (playerId, player, playerName) |> Some
             | Withdrawn _ -> None)
-        |> List.sortBy (fun (_, player, playerName) -> (match player.PlayerType with | Forward -> 1 | Back -> 2), playerName)
+        |> List.sortBy (fun (_, player, playerName) -> (match player.PlayerType with | Forward -> forwardOrder | Back -> backOrder), playerName)
         |> List.map (fun (playerId, _, playerName) -> playerId |> toJson, playerName)
     else []
 
@@ -143,7 +144,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
         match addMatchEvent with
         | TryEvent playerId ->
             let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic false)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let contents =
                 [
@@ -157,7 +158,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
         | PenaltyTryEvent -> addMatchEventInteraction, []
         | PenaltyKickEvent (playerId, kickType) ->
             let interaction = match playerId, kickType with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic true)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let successful, missed = "Successful", "Missed"
             let onSuccessful = (fun _ -> KickSuccessful |> KickTypeChanged |> dispatch)
@@ -177,7 +178,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
             interaction, contents
         | ConversionEvent (playerId, kickType) ->
             let interaction = match playerId, kickType with | Some _, Some _ -> addMatchEventInteraction | _ -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic true)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let successful, missed = "Successful", "Missed"
             let onSuccessful = (fun _ -> KickSuccessful |> KickTypeChanged |> dispatch)
@@ -197,7 +198,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
             interaction, contents
         | DropGoalEvent playerId ->
             let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic true)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let contents =
                 [
@@ -225,7 +226,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
                         ]
                     [ notification theme notificationWarning warnings ; br ]
                 | _ -> []
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic false)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let yellowChecked, redChecked = match card with | Some Yellow | Some SecondYellow -> true, false | Some Red -> false, true | None -> false, false
             let yellowRadio = radioInline theme "Yellow card" yellowChecked isAdding (fun _ -> Yellow |> CardSelected |> dispatch)
@@ -244,7 +245,7 @@ let private renderAddMatchEventModal (useDefaultTheme, fixtureDic:FixtureDic, sq
             interaction, contents
         | ManOfTheMatchEvent playerId ->
             let interaction = match playerId with | Some _ -> addMatchEventInteraction | None -> NotEnabled None
-            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic)
+            let values = (String.Empty, String.Empty) :: (squadId |> possiblePlayers squadDic false)
             let defaultPlayerValue = match playerId with | Some playerId -> playerId |> toJson |> Some | None -> String.Empty |> Some
             let contents =
                 [

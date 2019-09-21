@@ -112,7 +112,7 @@ let private cards (matchEventDic:MatchEventDic) =
 
 let private teamScoreEvents fixture role forSquadId againstSquadId (cards:((SquadId * PlayerId) * Card list) list) matchOutcome (squadDic:SquadDic) =
     let isTop8 squadId = if squadId |> squadDic.ContainsKey then match squadDic.[squadId] |> fst with | Some seeding -> seeding <= Seeding 8 | None -> false else false
-    let forIsTop8, againstIsTop8 = forSquadId |> isTop8, forSquadId |> isTop8
+    let forIsTop8, againstIsTop8 = forSquadId |> isTop8, againstSquadId |> isTop8
     let matchResult =
         if matchOutcome.HomeScore > matchOutcome.AwayScore then HomeWin, matchOutcome.HomeScore - matchOutcome.AwayScore
         else if matchOutcome.HomeScore < matchOutcome.AwayScore then AwayWin, matchOutcome.AwayScore - matchOutcome.HomeScore
