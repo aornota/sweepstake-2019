@@ -292,6 +292,36 @@ let private renderRemoveMatchEventModal (useDefaultTheme, squadDic:SquadDic, rem
             [ str "Remove match event" ] |> button theme { buttonLinkSmall with Interaction = removeMatchEventInteraction } ] ]
     cardModal theme (Some(title, onDismiss)) body
 
+let private renderCancelFixtureModal (useDefaultTheme, fixtureDic:FixtureDic, squadDic:SquadDic, cancelFixtureState:CancelFixtureState) dispatch =
+    let theme = getTheme useDefaultTheme
+    let titleText =
+        match cancelFixtureState.FixtureId |> fixtureText fixtureDic squadDic with
+        | Some fixtureText -> sprintf "Cancel %s" fixtureText
+        | None -> "Cancel fixture" // note: should never happen
+    let title = [ [ strong titleText ] |> para theme paraCentredSmall ]
+    let confirmInteraction, onDismiss =
+        let confirm = (fun _ -> ConfirmCancelFixture |> dispatch)
+        let cancel = (fun _ -> CancelCancelFixture |> dispatch)
+        match cancelFixtureState.CancelFixtureStatus with
+        | Some CancelFixturePending -> Loading, None
+        | Some (CancelFixtureFailed _) | None -> Clickable (confirm, None), cancel |> Some
+    let errorText = match cancelFixtureState.CancelFixtureStatus with | Some (CancelFixtureFailed errorText) -> errorText |> Some | Some CancelFixturePending | None -> None
+    let warning = [
+        [ strong "Are you sure you want to cancel this fixture?" ] |> para theme paraCentredSmaller
+        br
+        [ str "Please note that this action is irreversible." ] |> para theme paraCentredSmallest ]
+    let body = [
+        match errorText with
+        | Some errorText ->
+            yield notification theme notificationDanger [ [ str errorText ] |> para theme paraDefaultSmallest ]
+            yield br
+        | None -> ()
+        yield notification theme notificationWarning warning
+        yield br
+        yield field theme { fieldDefault with Grouped = Centred |> Some } [
+            [ str "Cancel fixture" ] |> button theme { buttonLinkSmall with Interaction = confirmInteraction } ] ]
+    cardModal theme (Some(title, onDismiss)) body
+
 let private filterTabs currentFixturesFilter dispatch =
     let isActive filter =
         match filter with
@@ -502,12 +532,13 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
         | KnockoutFixtures ->
             match fixture.Stage with | QuarterFinal _ | SemiFinal _ | BronzeFinal | Final -> true | Group _ -> false
         | Fixture _ -> false
-    let canConfirmParticipant, canAdministerResults =
+    let canConfirmParticipant, canAdministerResults, canCancelFixture =
         match authUser with
         | Some authUser ->
             let canConfirmParticipant = match authUser.Permissions.FixturePermissions with | Some fixturePermissions -> fixturePermissions.ConfirmFixturePermission | None -> false
-            canConfirmParticipant, authUser.Permissions.ResultsAdminPermission
-        | None -> false, false
+            let canCancelFixture = match authUser.Permissions.FixturePermissions with | Some fixturePermissions -> fixturePermissions.CreateFixturePermission | None -> false
+            canConfirmParticipant, authUser.Permissions.ResultsAdminPermission, canCancelFixture
+        | None -> false, false, false
     let confirmParticipant role participant fixtureId =
         match participant with
         | Confirmed _ -> None
@@ -540,73 +571,78 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                 if confirmable then
                     let paraConfirm = match role with | Home -> { paraDefaultSmallest with ParaAlignment = RightAligned } | Away -> paraDefaultSmallest
                     let onClick = (fun _ -> (fixtureId, role, unconfirmed) |> ShowConfirmParticipantModal |> dispatch)
-                    let confirmParticipant = [ [ str "Confirm participant" ] |> para theme paraConfirm ] |> link theme (Internal onClick)
-                    confirmParticipant |> Some
+                    [ [ str "Confirm participant" ] |> para theme paraConfirm ] |> link theme (Internal onClick) |> Some
                 else None
             else None
-    let stageElement stage =
+    let stageElement paraDetails stage =
         let stageText =
             match stage with
             | Group _ -> match currentFixtureFilter with | GroupFixtures _ | Fixture _ -> None | AllFixtures | KnockoutFixtures -> stage |> stageText |> Some
             | _ -> stage |> stageText |> Some
-        match stageText with | Some stageText -> [ str stageText ] |> para theme paraDefaultSmallest |> Some | None -> None
+        match stageText with | Some stageText -> [ str stageText ] |> para theme paraDetails |> Some | None -> None
     let details fixture =
         match fixture |> confirmedFixtureDetails squadDic with
         | Some (_, homeName, _, awayName), Some (homeIsWinner, homeScore, awayIsWinner, awayScore, _, _, _) ->
+            let paraScore = if fixture.Cancelled then { paraDefaultSmallest with ParaColour = GreyscalePara Grey } else paraDefaultSmallest
             let home = if homeIsWinner then strong homeName else str homeName
             let homeScore = sprintf "%i" homeScore
             let homeScore = if homeIsWinner then strong homeScore else str homeScore
-            let homeScore = [ homeScore ] |> para theme paraDefaultSmallest |> Some
+            let homeScore = [ homeScore ] |> para theme paraScore |> Some
             let away = if awayIsWinner then strong awayName else str awayName
             let awayScore = sprintf "%i" awayScore
             let awayScore = if awayIsWinner then strong awayScore else str awayScore
-            let awayScore = [ awayScore ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } |> Some
+            let awayScore = [ awayScore ] |> para theme { paraScore with ParaAlignment = RightAligned } |> Some
             home, homeScore, str "-", away, awayScore
         | _ ->
-            let homeParticipant, awayParticipant = fixture.HomeParticipant, fixture.AwayParticipant
-            let home =
-                match homeParticipant with
-                | Confirmed squadId ->
-                    let (SquadName squadName) = squadId |> squadName squadDic
-                    squadName
-                | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
-            let away =
-                match awayParticipant with
-                | Confirmed squadId ->
-                    let (SquadName squadName) = squadId |> squadName squadDic
-                    squadName
-                | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
+            let home, away = fixture |> homeAndAway squadDic
             str home, None, str "vs.", str away, None
     let extra (fixtureId, fixture) =
-        let local = fixture.KickOff.LocalDateTime
-        let hasResult = match fixture.HomeParticipant, fixture.AwayParticipant, fixture.MatchResult with | Confirmed _ , Confirmed _, Some _ -> true | _ -> false
-        let onClick = (fun _ -> fixtureId |> ShowFixture |> dispatch)
-        if hasResult then
-            let showFixtureText = if canAdministerResults then "Edit details" else "View details"
-            [ [ str showFixtureText ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] |> link theme (Internal onClick) |> Some
+        if fixture.Cancelled then [ [ str "Cancelled" ] |> tag theme { tagWarning with IsRounded = false } ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } |> Some
         else
-            if canAdministerResults && local < DateTime.Now then
-                [ [ str "Add details" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] |> link theme (Internal onClick) |> Some
+            let local = fixture.KickOff.LocalDateTime
+            let hasResult = match fixture.HomeParticipant, fixture.AwayParticipant, fixture.MatchResult with | Confirmed _ , Confirmed _, Some _ -> true | _ -> false
+            let onClick = (fun _ -> fixtureId |> ShowFixture |> dispatch)
+            if hasResult then
+                let showFixtureText = if canAdministerResults then "Edit details" else "View details"
+                [ [ str showFixtureText ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] |> link theme (Internal onClick) |> Some
             else
-                let paraExtra = { paraDefaultSmallest with ParaAlignment = RightAligned ; ParaColour = GreyscalePara Grey }
-                let extra, imminent = if local < DateTime.Now then em "Result pending" |> Some, true else local |> startsIn
-                let paraExtra = if imminent then { paraExtra with ParaColour = GreyscalePara GreyDarker } else paraExtra
-                match extra with | Some extra -> [ extra ] |> para theme paraExtra |> Some | None -> None
+                if canAdministerResults && local < DateTime.Now then
+                    [ [ str "Add details" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] |> link theme (Internal onClick) |> Some
+                else
+                    let paraExtra = { paraDefaultSmallest with ParaAlignment = RightAligned ; ParaColour = GreyscalePara Grey }
+                    let extra, imminent = if local < DateTime.Now then em "Result pending" |> Some, true else local |> startsIn
+                    let paraExtra = if imminent then { paraExtra with ParaColour = GreyscalePara GreyDarker } else paraExtra
+                    match extra with | Some extra -> [ extra ] |> para theme paraExtra |> Some | None -> None
+    let cancel (fixtureId, fixture) =
+        if canCancelFixture then
+            let cancellable =
+                match fixture.Cancelled, fixture.HomeParticipant, fixture.AwayParticipant, fixture.MatchResult with
+                | true, _, _, _ -> false
+                | false, Confirmed _, Confirmed _, None -> true
+                | false, Confirmed _, Confirmed _, Some matchResult when matchResult.MatchEvents.Length = 0 -> true
+                | _ -> false
+            if cancellable then
+                let onClick = (fun _ -> fixtureId |> ShowCancelFixtureModal |> dispatch)
+                [ [ str "Cancel fixture" ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ] |> link theme (Internal onClick) |> Some
+            else None
+        else None
     let fixtureRow (fixtureId, fixture) =
         let date, time = fixture.KickOff.LocalDateTime |> dateText, fixture.KickOff.LocalDateTime.ToString ("HH:mm")
+        let paraDetails = if fixture.Cancelled then { paraDefaultSmallest with ParaColour = GreyscalePara Grey } else paraDefaultSmallest
         let home, homeGoals, vs, away, awayGoals = fixture |> details
         tr false [
-            td [ [ str date ] |> para theme paraDefaultSmallest ]
-            td [ [ str time ] |> para theme paraDefaultSmallest ]
-            td [ RctH.ofOption (fixture.Stage |> stageElement) ]
+            td [ [ str date ] |> para theme paraDetails ]
+            td [ [ str time ] |> para theme paraDetails ]
+            td [ RctH.ofOption (fixture.Stage |> stageElement paraDetails) ]
             td [ RctH.ofOption (confirmParticipant Home fixture.HomeParticipant fixtureId) ]
-            td [ [ home ] |> para theme { paraDefaultSmallest with ParaAlignment = RightAligned } ]
+            td [ [ home ] |> para theme { paraDetails with ParaAlignment = RightAligned } ]
             td [ RctH.ofOption homeGoals ]
-            td [ [ vs ] |> para theme paraCentredSmallest ]
+            td [ [ vs ] |> para theme { paraDetails with ParaAlignment = Centred } ]
             td [ RctH.ofOption awayGoals ]
-            td [ [ away ] |> para theme paraDefaultSmallest ]
+            td [ [ away ] |> para theme paraDetails ]
             td [ RctH.ofOption (confirmParticipant Away fixture.AwayParticipant fixtureId) ]
-            td [ RctH.ofOption ((fixtureId, fixture) |> extra) ] ]
+            td [ RctH.ofOption ((fixtureId, fixture) |> extra) ]
+            td [ RctH.ofOption ((fixtureId, fixture) |> cancel) ] ]
     let fixtures =
         fixtureDic
         |> List.ofSeq
@@ -620,6 +656,7 @@ let private renderFixtures (useDefaultTheme, currentFixtureFilter, fixtureDic:Fi
                 tr false [
                     th [ [ strong "Date" ] |> para theme paraDefaultSmallest ]
                     th [ [ strong "Time" ] |> para theme paraDefaultSmallest ]
+                    th []
                     th []
                     th []
                     th []
@@ -655,6 +692,10 @@ let render (useDefaultTheme, state, authUser:AuthUser option, fixturesProjection
             match hasModal, state.RemoveMatchEventState with
             | false, Some removeMatchEventState ->
                 yield div divDefault [ lazyViewOrHMR2 renderRemoveMatchEventModal (useDefaultTheme, squadDic, removeMatchEventState) (RemoveMatchEventInput >> dispatch) ]
+            | _ -> ()
+            match hasModal, state.CancelFixtureState with
+            | false, Some cancelFixtureState ->
+                yield div divDefault [ lazyViewOrHMR2 renderCancelFixtureModal (useDefaultTheme, fixtureDic, squadDic, cancelFixtureState) (CancelFixtureInput >> dispatch) ]
             | _ -> ()
             yield div divCentred [ tabs theme { tabsDefault with TabsSize = Normal ; Tabs = filterTabs } ]
             match currentFixturesFilter with

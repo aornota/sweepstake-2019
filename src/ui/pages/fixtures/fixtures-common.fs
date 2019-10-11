@@ -33,6 +33,10 @@ type RemoveMatchEventInput =
     | RemoveMatchEvent
     | CancelRemoveMatchEvent
 
+type CancelFixtureInput =
+    | ConfirmCancelFixture
+    | CancelCancelFixture
+
 type Input =
     | AddNotificationMessage of notificationMessage : NotificationMessage
     | SendUiAuthMsg of uiAuthMsg : UiAuthMsg
@@ -53,6 +57,8 @@ type Input =
     | AddMatchEventInput of addMatchEventInput : AddMatchEventInput
     | ShowRemoveMatchEventModal of fixtureId : FixtureId * matchEventId : MatchEventId * matchEvent : MatchEvent
     | RemoveMatchEventInput of removeMatchEventInput : RemoveMatchEventInput
+    | ShowCancelFixtureModal of fixtureId : FixtureId
+    | CancelFixtureInput of cancelFixtureInput : CancelFixtureInput
 
 type ConfirmParticipantStatus =
     | ConfirmParticipantPending
@@ -94,12 +100,21 @@ type RemoveMatchEventState = {
     MatchEvent : MatchEvent
     RemoveMatchEventStatus : RemoveMatchEventStatus option }
 
+type CancelFixtureStatus =
+    | CancelFixturePending
+    | CancelFixtureFailed of errorText : string
+
+type CancelFixtureState = {
+    FixtureId : FixtureId
+    CancelFixtureStatus : CancelFixtureStatus option }
+
 type State = {
     CurrentFixturesFilter : FixturesFilter
     LastGroup : Group option
     ConfirmParticipantState : ConfirmParticipantState option
     AddMatchEventState : AddMatchEventState option
-    RemoveMatchEventState : RemoveMatchEventState option }
+    RemoveMatchEventState : RemoveMatchEventState option
+    CancelFixtureState : CancelFixtureState option }
 
 let unconfirmedText unconfirmed =
     match unconfirmed with
@@ -109,6 +124,28 @@ let unconfirmedText unconfirmed =
     | StageWinner (BronzeFinal) | StageWinner (Final) -> SHOULD_NEVER_HAPPEN
     | GroupRunnerUp group -> sprintf "%s runner-up" (group |> groupText)
     | SemiFinalLoser semiFinalOrdinal -> sprintf "Semi-final %i loser" semiFinalOrdinal
+
+let homeAndAway (squadDic:SquadDic) fixture =
+    let homeParticipant, awayParticipant = fixture.HomeParticipant, fixture.AwayParticipant
+    let home =
+        match homeParticipant with
+        | Confirmed squadId ->
+            let (SquadName squadName) = squadId |> squadName squadDic
+            squadName
+        | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
+    let away =
+        match awayParticipant with
+        | Confirmed squadId ->
+            let (SquadName squadName) = squadId |> squadName squadDic
+            squadName
+        | Unconfirmed unconfirmed -> unconfirmed |> unconfirmedText
+    home, away
+
+let fixtureText (fixtureDic:FixtureDic) (squadDic:SquadDic) fixtureId =
+    if fixtureId |> fixtureDic.ContainsKey then
+        let home, away = fixtureDic.[fixtureId] |> homeAndAway squadDic
+        sprintf "%s vs. %s" home away |> Some
+    else None
 
 let matchEventText (squadDic:SquadDic) matchEvent =
     match matchEvent with

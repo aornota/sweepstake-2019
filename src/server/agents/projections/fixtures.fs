@@ -27,6 +27,7 @@ type private FixtureInput =
     | OnParticipantConfirmed of fixtureId : FixtureId * rvn : Rvn * role : Role * squadId : SquadId
     | OnMatchEventAdded of fixtureId : FixtureId * rvn : Rvn * matchEventId : MatchEventId * matchEvent : MatchEvent
     | OnMatchEventRemoved of fixtureId : FixtureId * rvn : Rvn * matchEventId : MatchEventId
+    | OnFixtureCancelled of fixtureId : FixtureId * rvn : Rvn
     | OnSquadsRead of squadsRead : SquadRead list
     | RemoveConnections of connectionIds : ConnectionId list
     | HandleInitializeFixturesProjectionQry of connectionId : ConnectionId
@@ -34,7 +35,7 @@ type private FixtureInput =
 
 type private MatchEventDic = Dictionary<MatchEventId, MatchEvent>
 
-type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchEventDic : MatchEventDic }
+type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; Cancelled : bool ; MatchEventDic : MatchEventDic }
 type private FixtureDic = Dictionary<FixtureId, Fixture>
 
 type private PlayerDic = Dictionary<PlayerId, PlayerType>
@@ -85,7 +86,7 @@ let private matchOutcome fixture =
         |> List.sum
     match fixture.HomeParticipant, fixture.AwayParticipant with
     | Confirmed homeSquadId, Confirmed awaySquadId ->
-        if fixture.KickOff < DateTimeOffset.UtcNow && matchEventDic.Count > 0 then
+        if fixture.KickOff < DateTimeOffset.UtcNow && (matchEventDic.Count > 0 || fixture.Cancelled) then
             let homeScore, homeTotalTries, homePenaltyTries = homeSquadId |> score, homeSquadId |> tries false, homeSquadId |> tries true
             let awayScore, awayTotalTries, awayPenaltyTries = awaySquadId |> score, awaySquadId |> tries false, awaySquadId |> tries true
             let matchOutcome =
@@ -200,7 +201,7 @@ let private fixtureDto (squadDic:SquadDic) (fixtureId, fixture:Fixture) : Fixtur
             { MatchOutcome = matchOutcome ; HomeScoreEvents = homeScoreEvents ; AwayScoreEvents = awayScoreEvents ; MatchEvents = matchEvents } |> Some
         | None -> None
     { FixtureId = fixtureId ; Rvn = fixture.Rvn ; Stage = fixture.Stage ; HomeParticipant = fixture.HomeParticipant ; AwayParticipant = fixture.AwayParticipant ; KickOff = fixture.KickOff
-      MatchResult = matchResult }
+      Cancelled = fixture.Cancelled ; MatchResult = matchResult }
 
 let private fixtureDtoDic (squadDic:SquadDic) (fixtureDic:FixtureDic) =
     let fixtureDtoDic = FixtureDtoDic ()
@@ -253,7 +254,7 @@ let private ifAllRead source (fixturesRead:(FixtureRead list) option, squadsRead
             fixtureRead.MatchEventsRead |> List.iter (fun matchEventRead ->
                 if matchEventRead.MatchEventId |> matchEventDic.ContainsKey |> not then (matchEventRead.MatchEventId, matchEventRead.MatchEvent) |> matchEventDic.Add)
             let fixture = { Rvn = fixtureRead.Rvn ; Stage = fixtureRead.Stage ; HomeParticipant = fixtureRead.HomeParticipant ; AwayParticipant = fixtureRead.AwayParticipant
-                            KickOff = fixtureRead.KickOff ; MatchEventDic = matchEventDic }
+                            KickOff = fixtureRead.KickOff ; Cancelled = fixtureRead.Cancelled ; MatchEventDic = matchEventDic }
             (fixtureRead.FixtureId, fixture) |> fixtureDic.Add)
         let squadDic = SquadDic ()
         squadsRead |> List.iter (fun squadRead ->
@@ -278,6 +279,7 @@ type Fixtures () =
             | OnParticipantConfirmed _ -> "OnParticipantConfirmed when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | OnMatchEventAdded _ -> "OnMatchEventAdded when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | OnMatchEventRemoved _ -> "OnMatchEventRemoved when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
+            | OnFixtureCancelled _ -> "OnFixtureCancelled when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | OnSquadsRead _ -> "OnSquadsRead when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | RemoveConnections _ -> "RemoveConnections when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | HandleInitializeFixturesProjectionQry _ -> "HandleInitializeFixturesProjectionQry when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart () }
@@ -296,6 +298,7 @@ type Fixtures () =
             | OnParticipantConfirmed _ -> "OnParticipantConfirmed when pendingAllRead" |> IgnoredInput |> Agent |> log ; return! pendingAllRead fixturesRead squadsRead
             | OnMatchEventAdded _ -> "OnMatchEventAdded when pendingAllRead" |> IgnoredInput |> Agent |> log ; return! pendingAllRead fixturesRead squadsRead
             | OnMatchEventRemoved _ -> "OnMatchEventRemoved when pendingAllRead" |> IgnoredInput |> Agent |> log ; return! pendingAllRead fixturesRead squadsRead
+            | OnFixtureCancelled _ -> "OnFixtureCancelled when pendingAllRead" |> IgnoredInput |> Agent |> log ; return! pendingAllRead fixturesRead squadsRead
             | OnSquadsRead squadsRead ->
                 let source = "OnSquadsRead"
                 sprintf "%s (%i squad/s) when pendingAllRead" source squadsRead.Length |> Info |> log
@@ -354,6 +357,16 @@ type Fixtures () =
                         else state
                     else state
                 return! projectingFixtures state fixtureDic projecteeDic
+            | OnFixtureCancelled (fixtureId, rvn) ->
+                let source = "OnFixtureCancelled"
+                sprintf "%s (%A %A) when projectingFixtures (%i fixture/s) (%i projectee/s)" source fixtureId rvn fixtureDic.Count projecteeDic.Count |> Info |> log
+                let state =
+                    if fixtureId |> fixtureDic.ContainsKey then // note: silently ignore unknown fixtureId (should never happen)
+                        let fixture = fixtureDic.[fixtureId]
+                        fixtureDic.[fixtureId] <- { fixture with Rvn = rvn ; Cancelled = true }
+                        (fixtureDic, state) |> FixtureChange |> updateState source projecteeDic
+                    else state
+                return! projectingFixtures state fixtureDic projecteeDic
             | OnSquadsRead _ -> "OnSquadsRead when projectingFixtures" |> IgnoredInput |> Agent |> log ; return! projectingFixtures state fixtureDic projecteeDic
             | RemoveConnections connectionIds ->
                 let source = "RemoveConnections"
@@ -385,6 +398,7 @@ type Fixtures () =
                 | ParticipantConfirmed (fixtureId, role, squadId) -> (fixtureId, rvn, role, squadId) |> OnParticipantConfirmed |> agent.Post
                 | MatchEventAdded (fixtureId, matchEventId, matchEvent) -> (fixtureId, rvn, matchEventId, matchEvent) |> OnMatchEventAdded |> agent.Post
                 | MatchEventRemoved (fixtureId, matchEventId) -> (fixtureId, rvn, matchEventId) |> OnMatchEventRemoved |> agent.Post
+                | FixtureCancelled fixtureId -> (fixtureId, rvn) |> OnFixtureCancelled |> agent.Post
             | SquadsRead squadsRead -> squadsRead |> OnSquadsRead |> agent.Post
             | Disconnected connectionId -> [ connectionId ] |> RemoveConnections |> agent.Post
             | _ -> ())

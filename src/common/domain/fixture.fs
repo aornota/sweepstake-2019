@@ -73,4 +73,4 @@ type ScoreEvents = { TeamScoreEvents : (TeamScoreEvent * int<point>) list ; Play
 type MatchResult = { MatchOutcome : MatchOutcome ; HomeScoreEvents : ScoreEvents ; AwayScoreEvents : ScoreEvents ; MatchEvents : (MatchEventId * MatchEvent) list }
 
 type FixtureDto =
-    { FixtureId : FixtureId ; Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchResult : MatchResult option }
+    { FixtureId : FixtureId ; Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; Cancelled : bool ; MatchResult : MatchResult option }

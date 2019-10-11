@@ -10,6 +10,7 @@ type FixtureEvent =
     | ParticipantConfirmed of fixtureId : FixtureId * role : Role * squadId : SquadId
     | MatchEventAdded of fixtureId : FixtureId * matchEventId : MatchEventId * matchEvent : MatchEvent
     | MatchEventRemoved of fixtureId : FixtureId * matchEventId : MatchEventId
+    | FixtureCancelled of fixtureId : FixtureId
     with
         member self.FixtureId =
             match self with
@@ -17,3 +18,4 @@ type FixtureEvent =
             | ParticipantConfirmed (fixtureId, _, _) -> fixtureId
             | MatchEventAdded (fixtureId, _, _) -> fixtureId
             | MatchEventRemoved (fixtureId, _) -> fixtureId
+            | FixtureCancelled fixtureId -> fixtureId

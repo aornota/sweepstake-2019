@@ -122,6 +122,7 @@ type ServerFixturesMsg =
     | ConfirmParticipantCmdResult of result : Result<Unconfirmed, AuthCmdError<string>>
     | AddMatchEventCmdResult of result : Result<MatchEvent, AuthCmdError<string>>
     | RemoveMatchEventCmdResult of result : Result<MatchEvent, AuthCmdError<string>>
+    | CancelFixtureCmdResult of result : Result<FixtureId, AuthCmdError<string>>
 
 type ServerDraftsMsg =
     | ChangePriorityCmdResult of result : Result<UserDraftPick, UserDraftPick * AuthCmdError<string>>

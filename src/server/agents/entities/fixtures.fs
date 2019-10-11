@@ -37,10 +37,11 @@ type private FixturesInput =
     | HandleAddMatchEventCmd of token : ResultsAdminToken * auditUserId : UserId * fixtureId : FixtureId * currentRvn : Rvn * matchEvent : MatchEvent * connectionId : ConnectionId
     | HandleRemoveMatchEventCmd of token : ResultsAdminToken * auditUserId : UserId * fixtureId : FixtureId * currentRvn : Rvn * matchEventId : MatchEventId * matchEvent : MatchEvent
         * connectionId : ConnectionId
+    | HandleCancelFixtureCmd of token : CreateFixtureToken * auditUserId : UserId * fixtureId : FixtureId * currentRvn : Rvn * reply : AsyncReplyChannel<Result<FixtureId, AuthCmdError<string>>>
 
 type private MatchEventDic = Dictionary<MatchEventId, MatchEvent>
 
-type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; MatchEventDic : MatchEventDic }
+type private Fixture = { Rvn : Rvn ; Stage : Stage ; HomeParticipant : Participant ; AwayParticipant : Participant ; KickOff : DateTimeOffset ; Cancelled : bool ; MatchEventDic : MatchEventDic }
 type private FixtureDic = Dictionary<FixtureId, Fixture>
 
 let private log category = (Entity Entity.Fixtures, category) |> consoleLogger.Log
@@ -62,7 +63,7 @@ let private applyFixtureEvent source idAndFixtureResult (nextRvn, fixtureEvent:F
     | Ok (fixtureId, Some fixture), _ when validateNextRvn (Some fixture.Rvn) nextRvn |> not -> // note: should never happen
         ifDebug (sprintf "Invalid next Rvn for %A (%A) -> %A (%A)" fixtureId fixture.Rvn nextRvn fixtureEvent) UNEXPECTED_ERROR |> otherError
     | Ok (fixtureId, None), FixtureCreated (_, stage, homeParticipant, awayParticipant, kickOff) ->
-        let fixture = { Rvn = nextRvn ; Stage = stage ; HomeParticipant = homeParticipant ; AwayParticipant = awayParticipant ; KickOff = kickOff ; MatchEventDic = MatchEventDic () }
+        let fixture = { Rvn = nextRvn ; Stage = stage ; HomeParticipant = homeParticipant ; AwayParticipant = awayParticipant ; KickOff = kickOff ; Cancelled = false ; MatchEventDic = MatchEventDic () }
         (fixtureId, fixture |> Some) |> Ok
     | Ok (fixtureId, None), _ -> // note: should never happen
         ifDebug (sprintf "Invalid initial FixtureEvent for %A -> %A" fixtureId fixtureEvent) UNEXPECTED_ERROR |> otherError
@@ -86,6 +87,12 @@ let private applyFixtureEvent source idAndFixtureResult (nextRvn, fixtureEvent:F
             matchEventId |> matchEventDic.Remove |> ignore
             (fixtureId, { fixture with Rvn = nextRvn } |> Some) |> Ok
         else ifDebug (sprintf "%A does not exist for %A" matchEventId fixtureId) UNEXPECTED_ERROR |> otherError
+    | Ok (fixtureId, Some fixture), FixtureCancelled _ when fixture.Cancelled ->
+        ifDebug (sprintf "Fixture already Cancelled for %A -> %A" fixtureId fixtureEvent) UNEXPECTED_ERROR |> otherError
+    | Ok (fixtureId, Some fixture), FixtureCancelled _ when fixture.MatchEventDic.Count > 0 ->
+        ifDebug (sprintf "Fixture has MatchEvents (%i) for %A -> %A" fixture.MatchEventDic.Count fixtureId fixtureEvent) UNEXPECTED_ERROR |> otherError
+    | Ok (fixtureId, Some fixture), FixtureCancelled _ ->
+        (fixtureId, { fixture with Rvn = nextRvn ; Cancelled = true } |> Some) |> Ok
     | Error error, _ -> error |> Error
 
 let private initializeFixtures source (fixturesEvents:(FixtureId * (Rvn * FixtureEvent) list) list) =
@@ -152,7 +159,8 @@ type Fixtures () =
             | HandleConfirmParticipantCmd _ -> "HandleConfirmParticipantCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | HandleAddMatchEventSpecialCmd _ -> "HandleAddMatchEventSpecialCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
             | HandleAddMatchEventCmd _ -> "HandleAddMatchEventCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
-            | HandleRemoveMatchEventCmd _ -> "HandleRemoveMatchEventCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart () }
+            | HandleRemoveMatchEventCmd _ -> "HandleRemoveMatchEventCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart ()
+            | HandleCancelFixtureCmd _ -> "HandleCancelFixtureCmd when awaitingStart" |> IgnoredInput |> Agent |> log ; return! awaitingStart () }
         and pendingOnFixturesEventsRead () = async {
             let! input = inbox.Receive ()
             match input with
@@ -171,14 +179,15 @@ type Fixtures () =
                         let matchEventsRead = fixture.MatchEventDic |> List.ofSeq |> List.map (fun (KeyValue (matchEventId, matchEvent)) ->
                             { MatchEventId = matchEventId ; MatchEvent = matchEvent })
                         { FixtureId = fixtureId ; Rvn = fixture.Rvn ; Stage = fixture.Stage ; HomeParticipant = fixture.HomeParticipant ; AwayParticipant = fixture.AwayParticipant
-                          KickOff = fixture.KickOff ; MatchEventsRead = matchEventsRead })
+                          KickOff = fixture.KickOff ; Cancelled = fixture.Cancelled ; MatchEventsRead = matchEventsRead })
                 fixturesRead |> FixturesRead |> broadcaster.Broadcast
                 return! managingFixtures fixtures
             | HandleCreateFixtureCmd _ -> "HandleCreateFixtureCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead ()
             | HandleConfirmParticipantCmd _ -> "HandleConfirmParticipantCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead ()
             | HandleAddMatchEventSpecialCmd _ -> "HandleAddMatchEventSpecialCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead ()
             | HandleAddMatchEventCmd _ -> "HandleAddMatchEventCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead ()
-            | HandleRemoveMatchEventCmd _ -> "HandleRemoveMatchEventCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead () }
+            | HandleRemoveMatchEventCmd _ -> "HandleRemoveMatchEventCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead ()
+            | HandleCancelFixtureCmd _ -> "HandleCancelFixtureCmd when pendingOnFixturesEventsRead" |> IgnoredInput |> Agent |> log ; return! pendingOnFixturesEventsRead () }
         and managingFixtures fixtureDic = async {
             let! input = inbox.Receive ()
             match input with
@@ -265,6 +274,23 @@ type Fixtures () =
                 let serverMsg = result |> Result.bind (fun (_, _, matchEvent) -> matchEvent |> Ok) |> RemoveMatchEventCmdResult |> ServerFixturesMsg
                 (serverMsg, [ connectionId ]) |> SendMsg |> broadcaster.Broadcast
                 match result with | Ok (fixtureId, fixture, _) -> fixtureDic |> updateFixture fixtureId fixture | Error _ -> ()
+                return! managingFixtures fixtureDic
+            | HandleCancelFixtureCmd (_, auditUserId, fixtureId, currentRvn, reply) ->
+                let source = "HandleCancelFixtureCmd"
+                sprintf "%s for %A when managingFixtures (%i fixture/s)" source fixtureId fixtureDic.Count |> Verbose |> log
+                let result =
+                    fixtureDic |> tryFindFixture fixtureId (otherCmdError source)
+                    |> Result.bind (fun (fixtureId, fixture) ->
+                        if fixture.Cancelled then ifDebug (sprintf "%A has already been cancelled" fixtureId) UNEXPECTED_ERROR |> otherCmdError source
+                        else if fixture.MatchEventDic.Count > 0 then
+                            ifDebug (sprintf "%A cannot be cancelled as it has match events (%i)" fixtureId fixture.MatchEventDic.Count) UNEXPECTED_ERROR |> otherCmdError source
+                        else (fixtureId, fixture) |> Ok)
+                    |> Result.bind (fun (fixtureId, fixture) ->
+                        fixtureId |> FixtureCancelled |> tryApplyFixtureEvent source fixtureId (Some fixture) (incrementRvn currentRvn) ())
+                let! result = match result with | Ok (fixture, rvn, fixtureEvent, _) -> tryWriteFixtureEventAsync auditUserId rvn fixtureEvent fixture () | Error error -> error |> Error |> thingAsync
+                result |> logResult source (fun (fixtureId, fixture, _) -> sprintf "Audit%A %A %A" auditUserId fixtureId fixture |> Some) // note: log success/failure here (rather than assuming that calling code will do so)
+                result |> Result.bind (fun (fixtureId, _, _) -> fixtureId |> Ok) |> reply.Reply
+                match result with | Ok (fixtureId, fixture, _) -> fixtureDic |> updateFixture fixtureId fixture | Error _ -> ()
                 return! managingFixtures fixtureDic }
         "agent instantiated -> awaitingStart" |> Info |> log
         awaitingStart ())
@@ -290,5 +316,7 @@ type Fixtures () =
         (token, auditUserId, fixtureId, currentRvn, matchEvent, connectionId) |> HandleAddMatchEventCmd |> agent.Post
     member __.HandleRemoveMatchEventCmd (token, auditUserId, fixtureId, currentRvn, matchEventId, matchEvent, connectionId) =
         (token, auditUserId, fixtureId, currentRvn, matchEventId, matchEvent, connectionId) |> HandleRemoveMatchEventCmd |> agent.Post
+    member __.HandleCancelFixtureCmdAsync (token, auditUserId, fixtureId, currentRvn) =
+        (fun reply -> (token, auditUserId, fixtureId, currentRvn, reply) |> HandleCancelFixtureCmd) |> agent.PostAndAsyncReply
 
 let fixtures = Fixtures ()

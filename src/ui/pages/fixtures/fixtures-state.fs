@@ -18,7 +18,7 @@ open Elmish
 open System
 
 let initialize () : State * Cmd<Input> =
-    { CurrentFixturesFilter = AllFixtures ; LastGroup = None ; ConfirmParticipantState = None ; AddMatchEventState = None ; RemoveMatchEventState = None }, Cmd.none
+    { CurrentFixturesFilter = AllFixtures ; LastGroup = None ; ConfirmParticipantState = None ; AddMatchEventState = None ; RemoveMatchEventState = None ; CancelFixtureState = None }, Cmd.none
 
 let private shouldNeverHappenCmd debugText = debugText |> shouldNeverHappenText |> debugDismissableMessage |> AddNotificationMessage |> Cmd.ofMsg
 
@@ -76,7 +76,25 @@ let private handleRemoveMatchEventCmdResult (result:Result<MatchEvent, AuthCmdEr
     | _ ->
         state, shouldNeverHappenCmd (sprintf "Unexpected RemoveMatchEventCmdResult when RemoveMatchEventState is None -> %A" result)
 
-let private handleServerFixturesMsg serverFixturesMsg (squadDic:SquadDic) state : State * Cmd<Input> =
+let private handleCancelFixtureCmdResult (result:Result<FixtureId, AuthCmdError<string>>) (fixtureDic:FixtureDic) (squadDic:SquadDic) state : State * Cmd<Input> =
+    match state.CancelFixtureState with
+    | Some cancelFixtureState ->
+        match cancelFixtureState.CancelFixtureStatus with
+        | Some CancelFixturePending ->
+            match result with
+            | Ok fixtureId ->
+                let fixtureText = match fixtureId |> fixtureText fixtureDic squadDic with | Some fixtureText -> fixtureText | None -> sprintf "%A" fixtureId
+                { state with CancelFixtureState = None }, sprintf "<strong>%s</strong> has been cancelled" fixtureText |> successToastCmd
+            | Error error ->
+                let errorText = ifDebug (sprintf "CancelFixtureCmdResult error -> %A" error) (error |> cmdErrorText)
+                let cancelFixtureState = { cancelFixtureState with CancelFixtureStatus = errorText |> CancelFixtureFailed |> Some }
+                { state with CancelFixtureState = cancelFixtureState |> Some }, "Unable to cancel fixture" |> errorToastCmd
+        | Some (CancelFixtureFailed _) | None ->
+            state, shouldNeverHappenCmd (sprintf "Unexpected CancelFixtureCmdResult when CancelFixtureStatus is not CancelFixturePending -> %A" result)
+    | _ ->
+        state, shouldNeverHappenCmd (sprintf "Unexpected CancelFixtureCmdResult when CancelFixtureState is None -> %A" result)
+
+let private handleServerFixturesMsg serverFixturesMsg (fixtureDic:FixtureDic) (squadDic:SquadDic) state : State * Cmd<Input> =
     match serverFixturesMsg with
     | ConfirmParticipantCmdResult result ->
         state |> handleConfirmParticipantCmdResult result
@@ -84,6 +102,8 @@ let private handleServerFixturesMsg serverFixturesMsg (squadDic:SquadDic) state 
         state |> handleAddMatchEventCmdResult result squadDic
     | RemoveMatchEventCmdResult result ->
         state |> handleRemoveMatchEventCmdResult result squadDic
+    | CancelFixtureCmdResult result ->
+        state |> handleCancelFixtureCmdResult result fixtureDic squadDic
 
 let private updateLast state = match state.CurrentFixturesFilter with | GroupFixtures group -> { state with LastGroup = group } | _ -> state
 
@@ -213,6 +233,23 @@ let private handleRemoveMatchEventInput removeMatchEventInput (fixtureDic:Fixtur
     | _, None ->
         state, shouldNeverHappenCmd (sprintf "Unexpected RemoveMatchEventInput when RemoveMatchEventState is None -> %A" removeMatchEventInput), false
 
+let private handleCancelFixtureInput cancelFixtureInput (fixtureDic:FixtureDic) state : State * Cmd<Input> * bool =
+    match cancelFixtureInput, state.CancelFixtureState with
+    | ConfirmCancelFixture, Some cancelFixtureState ->
+        let cancelFixtureState = { cancelFixtureState with CancelFixtureStatus = CancelFixturePending |> Some }
+        let fixtureId = cancelFixtureState.FixtureId
+        let currentRvn = if fixtureId |> fixtureDic.ContainsKey then fixtureDic.[fixtureId].Rvn else initialRvn
+        let cmd = (fixtureId, currentRvn) |> CancelFixtureCmd |> UiAuthFixturesMsg |> SendUiAuthMsg |> Cmd.ofMsg
+        { state with CancelFixtureState = cancelFixtureState |> Some }, cmd, true
+    | CancelCancelFixture, Some cancelFixtureState ->
+        match cancelFixtureState.CancelFixtureStatus with
+        | Some CancelFixturePending ->
+            state, shouldNeverHappenCmd "Unexpected CancelCancelFixture when CancelFixturePending", false
+        | Some (CancelFixtureFailed _) | None ->
+            { state with CancelFixtureState = None }, Cmd.none, false
+    | _, None ->
+        state, shouldNeverHappenCmd (sprintf "Unexpected CancelFixtureInput when CancelFixtureState is None -> %A" cancelFixtureInput), false
+
 let transition input (fixturesProjection:Projection<_ * FixtureDic>) (squadsProjection:Projection<_ * SquadDic>) state =
     let state, cmd, isUserNonApiActivity =
         match input, fixturesProjection, squadsProjection with
@@ -220,8 +257,8 @@ let transition input (fixturesProjection:Projection<_ * FixtureDic>) (squadsProj
             state, Cmd.none, false
         | SendUiAuthMsg _, Ready _, Ready _ -> // note: expected to be handled by Program.State.transition
             state, Cmd.none, false
-        | ReceiveServerFixturesMsg serverFixturesMsg, Ready _, Ready (_, squadDic) ->
-            let state, cmd = state |> handleServerFixturesMsg serverFixturesMsg squadDic
+        | ReceiveServerFixturesMsg serverFixturesMsg, Ready (_, fixtureDic), Ready (_, squadDic) ->
+            let state, cmd = state |> handleServerFixturesMsg serverFixturesMsg fixtureDic squadDic
             state, cmd, false
         | ShowAllFixtures, Ready _, Ready _ ->
             let state = state |> updateLast
@@ -280,6 +317,11 @@ let transition input (fixturesProjection:Projection<_ * FixtureDic>) (squadsProj
             { state with RemoveMatchEventState = removeMatchEventState |> Some }, Cmd.none, true
         | RemoveMatchEventInput removeMatchEventInput, Ready (_, fixtureDic), Ready _ ->
             state |> handleRemoveMatchEventInput removeMatchEventInput fixtureDic
+        | ShowCancelFixtureModal fixtureId, Ready _, Ready _ -> // note: no need to check for unknown fixtureId &c. (should never happen)
+            let cancelFixtureState = { FixtureId = fixtureId ; CancelFixtureStatus = None }
+            { state with CancelFixtureState = cancelFixtureState |> Some }, Cmd.none, true
+        | CancelFixtureInput cancelFixtureInput, Ready (_, fixtureDic), Ready _ ->
+            state |> handleCancelFixtureInput cancelFixtureInput fixtureDic
         | _, _, _ ->
             state, shouldNeverHappenCmd (sprintf "Unexpected Input when %A -> %A" fixturesProjection input), false
     state, cmd, isUserNonApiActivity
