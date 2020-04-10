@@ -27,7 +27,7 @@ group server
 	nuget Microsoft.AspNetCore.WebSockets
     nuget Giraffe
     nuget jose-jwt
-	nuget TaskBuilder.fs 1.1.1
+	nuget TaskBuilder.fs
     nuget Thoth.Json.Net
 
 group ui
@@ -50,5 +50,5 @@ group ui
     nuget Fulma
     nuget Fulma.Extensions.Wikiki.Checkradio
 	nuget Fulma.Extensions.Wikiki.PageLoader
-	nuget Fulma.Extensions.Wikiki.Tooltip 2.0.1 // 2.0.1 is outdated (as is bulma-tooltip 2.0.2) - but 3.0.0 not yet tested
+	nuget Fulma.Extensions.Wikiki.Tooltip 2.0.1 // pinned to 2.0.1 (and bulma-tooltip pinned to 2.0.2) as 3.0.0 seems not to work
 	nuget Thoth.Json
