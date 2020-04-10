@@ -92,7 +92,7 @@ Target.create "run" (fun _ ->
 
 Target.create "build-server" (fun _ -> runDotNet "build -c Release" serverDir)
 Target.create "build-ui" (fun _ -> buildUiLocal ())
-Target.create "build" (fun _ -> ())
+Target.create "build" ignore
 
 Target.create "publish-server" (fun _ -> runDotNet (sprintf "publish -c Release -o \"%s\"" publishDir) serverDir)
 Target.create "publish-ui-local" (fun _ ->
@@ -101,8 +101,8 @@ Target.create "publish-ui-local" (fun _ ->
 Target.create "publish-ui-azure" (fun _ ->
     buildUiAzure ()
     publishUi ())
-Target.create "publish" (fun _ -> ())
-Target.create "publish-azure" (fun _ -> ())
+Target.create "publish" ignore
+Target.create "publish-azure" ignore
 
 Target.create "arm-template" (fun _ ->
     let armTemplate = "arm-template.json"
