@@ -25,7 +25,6 @@ group server
 	nuget Microsoft.AspNetCore
 	nuget Microsoft.AspNetCore.StaticFiles
 	nuget Microsoft.AspNetCore.WebSockets
-    nuget Giraffe
     nuget jose-jwt
 	nuget TaskBuilder.fs
     nuget Thoth.Json.Net

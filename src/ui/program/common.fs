@@ -96,7 +96,6 @@ type AppInput =
     | UnauthInput of unauthInput : UnauthInput
     | AuthInput of authInput : AuthInput
 
-// #region Input
 type Input =
 #if TICK
     | Tick
@@ -111,7 +110,6 @@ type Input =
     | WsError of wsError : WsError
     | HandleServerMsg of serverMsg : ServerMsg
     | AppInput of appInput : AppInput
-// #endregion
 
 type ConnectedState = {
     Ws : WebSocket // TODO-NMB-MEDIUM: Switch to using Fable.Websockets.Elmish?...
@@ -205,4 +203,5 @@ type State = {
     ConnectionState : ConnectionState
     AppState : AppState }
 
-let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2019 (δ)"
+// (α | β | γ | δ | ε) | ζ | η | θ | ι | κ | λ | μ | ν | ξ | ο | π | ρ | σ | τ | υ | φ | χ | ψ | ω
+let [<Literal>] SWEEPSTAKE_2018 = "sweepstake 2019 (ε)"

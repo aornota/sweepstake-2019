@@ -67,11 +67,9 @@ let private headerPages (appState:AppState) =
         ]
     | ReadingPreferences | Connecting _ | ServiceUnavailable | AutomaticallySigningIn _ -> []
 
-// #region renderHeader
 let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:DateTimeOffset option, headerStatus, headerPages, _:int<tick>) dispatch =
     let isAdminPage page = match page with | AuthPage UserAdminPage | AuthPage DraftAdminPage -> true | _ -> false
     let theme = getTheme useDefaultTheme
-    // #region serverStarted
     let serverStarted =
         match headerStatus, serverStarted with
         | SignedIn authUser, Some serverStarted when authUser.UserType = SuperUser ->
@@ -83,7 +81,6 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
 #endif
             navbarItem [ [ str (sprintf "Server started %s" timestampText ) ] |> para theme { paraDefaultSmallest with ParaColour = GreyscalePara GreyDark } ] |> Some
         | _, _ -> None
-    // #endregion
     let statusInfo =
         let paraStatus = { paraDefaultSmallest with ParaColour = GreyscalePara GreyDarker }
         let spinner = icon iconSpinnerPulseSmall
@@ -179,7 +176,6 @@ let private renderHeader (useDefaultTheme, navbarBurgerIsActive, serverStarted:D
                     navbarItem [ [ str (DateTimeOffset.UtcNow.LocalDateTime.ToString ("HH:mm:ss")) ] |> para theme { paraDefaultSmallest with ParaColour = GreyscalePara GreyDarker } ]
 #endif
                     navbarItem [ [] |> button theme toggleThemeButton ] ] ] ] ]
-// #endregion
 
 let private renderStaticModal (useDefaultTheme, titleText, markdown) dispatch =
     let theme = getTheme useDefaultTheme
@@ -534,7 +530,7 @@ let private renderFooter useDefaultTheme =
                 [ str "Bulma" ] |> link theme (NewWindow "https://bulma.io/") ; str " and "
                 [ str "Giraffe" ] |> link theme (NewWindow "https://github.com/giraffe-fsharp/Giraffe/") ; str ". Developed in "
                 [ str "Visual Studio Code" ] |> link theme (NewWindow "https://code.visualstudio.com/") ; str " using "
-                [ str "Ionide-fsharp" ] |> link theme (NewWindow "http://ionide.io/docs/") ; str ". Best viewed with "
+                [ str "Ionide-fsharp" ] |> link theme (NewWindow "http://ionide.io/") ; str ". Best viewed with "
                 [ str "Chrome" ] |> link theme (NewWindow "https://www.google.com/chrome/") ; str ". Not especially mobile-friendly." ] |> para theme paraCentredSmallest ] ]
 
 let render state dispatch =

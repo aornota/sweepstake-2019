@@ -14,6 +14,7 @@ open Aornota.Sweepstake2019.Server.DefaultData
 open Aornota.Sweepstake2019.Server.Startup
 
 open System
+open System.IO
 
 open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Hosting
@@ -21,6 +22,10 @@ open Microsoft.AspNetCore.Hosting
 let [<Literal>] private SECONDS_PER_TICK = 1<second/tick>
 
 let private log category = (Host, category) |> consoleLogger.Log
+
+let private publicPath =
+    let publicPath = Path.Combine ("..", "ui/public") |> Path.GetFullPath // e.g. when served via webpack-dev-server
+    if Directory.Exists publicPath then publicPath else "public" |> Path.GetFullPath // e.g. when published/deployed
 
 let private serverStarted = DateTimeOffset.UtcNow
 
