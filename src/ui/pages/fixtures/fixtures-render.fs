@@ -346,7 +346,6 @@ let private groupTabs currentFixturesFilter dispatch =
     | GroupFixtures currentGroup -> groups |> List.map (groupTab currentGroup dispatch)
     | _ -> []
 
-// #region startsIn
 let private startsIn (_timestamp:DateTime) : Fable.React.ReactElement option * bool =
 #if TICK
     let startsIn, imminent = _timestamp |> startsIn
@@ -354,7 +353,6 @@ let private startsIn (_timestamp:DateTime) : Fable.React.ReactElement option * b
 #else
     None, false
 #endif
-// #endregion
 
 let private stageText stage =
     match stage with
