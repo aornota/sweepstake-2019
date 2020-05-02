@@ -526,7 +526,7 @@ let private renderFooter useDefaultTheme =
                 [ str "F#" ] |> link theme (NewWindow "http://fsharp.org/") ; str " using "
                 [ str "Fable" ] |> link theme (NewWindow "http://fable.io/") ; str ", "
                 [ str "Elmish" ] |> link theme (NewWindow "https://elmish.github.io/") ; str ", "
-                [ str "Fulma" ] |> link theme (NewWindow "https://github.com/Fulma/Fulma/") ; str " / "
+                [ str "Fulma" ] |> link theme (NewWindow "https://fulma.github.io/Fulma/") ; str " / "
                 [ str "Bulma" ] |> link theme (NewWindow "https://bulma.io/") ; str " and "
                 [ str "Giraffe" ] |> link theme (NewWindow "https://github.com/giraffe-fsharp/Giraffe/") ; str ". Developed in "
                 [ str "Visual Studio Code" ] |> link theme (NewWindow "https://code.visualstudio.com/") ; str " using "
