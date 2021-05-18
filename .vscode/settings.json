@@ -1,5 +1,5 @@
 {
-	"editor.fontSize": 13
+	"editor.fontSize": 12
 	, "files.exclude": {
 		".fable/": true
 		, ".fake/": true
@@ -24,7 +24,6 @@
 		, "yarn.lock": true
 	}
 	,
-	"FSharp.fsacRuntime": "netcore",
 	"FSharp.suggestGitignore": false,
 	"FSharp.suggestSdkScripts": false
 }

@@ -525,10 +525,9 @@ let private renderFooter useDefaultTheme =
                 [ str "Written" ] |> link theme (NewWindow "https://github.com/aornota/sweepstake-2019") ; str " in "
                 [ str "F#" ] |> link theme (NewWindow "http://fsharp.org/") ; str " using "
                 [ str "Fable" ] |> link theme (NewWindow "http://fable.io/") ; str ", "
-                [ str "Elmish" ] |> link theme (NewWindow "https://elmish.github.io/") ; str ", "
+                [ str "Elmish" ] |> link theme (NewWindow "https://elmish.github.io/") ; str ", and "
                 [ str "Fulma" ] |> link theme (NewWindow "https://fulma.github.io/Fulma/") ; str " / "
-                [ str "Bulma" ] |> link theme (NewWindow "https://bulma.io/") ; str " and "
-                [ str "Giraffe" ] |> link theme (NewWindow "https://github.com/giraffe-fsharp/Giraffe/") ; str ". Developed in "
+                [ str "Bulma" ] |> link theme (NewWindow "https://bulma.io/") ; str ". Developed in "
                 [ str "Visual Studio Code" ] |> link theme (NewWindow "https://code.visualstudio.com/") ; str " using "
                 [ str "Ionide-fsharp" ] |> link theme (NewWindow "http://ionide.io/") ; str ". Best viewed with "
                 [ str "Chrome" ] |> link theme (NewWindow "https://www.google.com/chrome/") ; str ". Not especially mobile-friendly." ] |> para theme paraCentredSmallest ] ]
